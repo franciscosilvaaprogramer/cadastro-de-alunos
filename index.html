@@ -1,1 +1,1148 @@
+<!doctype html>
+<html lang="pt-BR" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadastro de Alunos</title>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js" integrity="sha512-4vRWC4XIIhb4PPR3j7yVMRLewlR8OzKfKEH/gk1j4RwzmONRCLZvYnoFYcYpEoN4fhvNfYJb6z8ZjjRoA8M2Nw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    
+    * {
+      box-sizing: border-box;
+    }
 
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 16px 24px;
+      border-radius: 8px;
+      color: white;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 1000;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .toast.success {
+      background-color: #10b981;
+    }
+
+    .toast.error {
+      background-color: #ef4444;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .modal-overlay {
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .btn-primary {
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+
+    .card {
+      transition: all 0.2s ease;
+    }
+
+    .card:hover {
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+ </head>
+ <body class="h-full"><!-- Login Screen -->
+  <div id="login-screen" class="w-full h-full flex items-center justify-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+   <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md">
+    <div class="text-center mb-8">
+     <div class="bg-purple-100 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-4">
+      <svg class="w-12 h-12 text-purple-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+      </svg>
+     </div>
+     <h2 class="text-3xl font-bold text-gray-800 mb-2">🔐 Acesso ao Sistema</h2>
+     <p class="text-gray-600">Sistema de Cadastro de Alunos</p>
+    </div>
+    <form id="login-form" class="space-y-6">
+     <div><label for="login-user" class="block text-sm font-medium text-gray-700 mb-2">👤 Selecione o Usuário</label> <select id="login-user" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-lg"> <option value="">Escolha seu usuário</option> <option value="0">👨‍💼 Francisco Silva (Administrador)</option> <option value="1">👩‍💼 Gill��ne (Secretária de Educação)</option> <option value="2">👩‍🏫 Coordenadoras (Acesso Geral)</option> </select>
+     </div>
+     <div><label for="login-password" class="block text-sm font-medium text-gray-700 mb-2">🔒 Digite sua senha</label> <input type="password" id="login-password" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-center text-lg" placeholder="••••••••">
+     </div>
+     <div id="login-error" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm text-center">
+      ❌ Senha incorreta. Tente novamente.
+     </div><button type="submit" id="btn-login" class="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-all"> Entrar no Sistema </button>
+    </form>
+   </div>
+  </div><!-- Main App (Hidden by default) -->
+  <div id="app" class="w-full h-full overflow-auto hidden" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+   <main class="w-full max-w-7xl mx-auto px-4 py-8"><!-- Header -->
+    <header class="mb-8">
+     <div class="flex justify-between items-center mb-4">
+      <div class="flex-1"></div>
+      <div class="flex items-center gap-4"><span id="logged-user" class="text-white font-medium"></span> <button id="btn-logout" class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-lg font-medium hover:bg-opacity-30 transition-all flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+        </svg> Sair </button>
+      </div>
+     </div>
+     <div class="text-center">
+      <h1 id="main-title" class="text-4xl font-bold text-white mb-2">Cadastro de Alunos</h1>
+      <p id="subtitle" class="text-xl text-white opacity-90">Rede Municipal de Ensino</p>
+     </div>
+    </header><!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+     <div class="bg-white rounded-lg p-6 shadow-lg">
+      <div class="flex items-center justify-between">
+       <div>
+        <p class="text-gray-600 text-sm font-medium">Total de Alunos</p>
+        <p id="total-alunos" class="text-3xl font-bold text-gray-800 mt-1">0</p>
+       </div>
+       <div class="bg-blue-100 rounded-full p-3">
+        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+        </svg>
+       </div>
+      </div>
+     </div>
+     <div class="bg-white rounded-lg p-6 shadow-lg">
+      <div class="flex items-center justify-between">
+       <div>
+        <p class="text-gray-600 text-sm font-medium">Usam Transporte</p>
+        <p id="total-transporte" class="text-3xl font-bold text-gray-800 mt-1">0</p>
+       </div>
+       <div class="bg-green-100 rounded-full p-3">
+        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+        </svg>
+       </div>
+      </div>
+     </div>
+     <div class="bg-white rounded-lg p-6 shadow-lg">
+      <div class="flex items-center justify-between">
+       <div>
+        <p class="text-gray-600 text-sm font-medium">Alunos PCD</p>
+        <p id="total-pcd" class="text-3xl font-bold text-gray-800 mt-1">0</p>
+       </div>
+       <div class="bg-purple-100 rounded-full p-3">
+        <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+        </svg>
+       </div>
+      </div>
+     </div>
+    </div><!-- Action Buttons -->
+    <div class="mb-6 flex gap-4"><button id="btn-novo" class="btn-primary bg-white text-purple-700 px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-gray-50"> ➕ Novo Cadastro </button> <button id="btn-filtrar" class="bg-purple-800 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-purple-900"> 🔍 Filtrar </button> <button id="btn-exportar" class="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-green-700 flex items-center gap-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+      </svg> Exportar Excel </button>
+    </div><!-- Filter Section -->
+    <div id="filter-section" class="bg-white rounded-lg p-6 shadow-lg mb-6 hidden">
+     <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-2">🏫 Selecione a Escola</label> <select id="filter-escola" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"> <option value="">Todas as escolas</option> </select>
+     </div>
+     <div id="escola-selected-filter" class="hidden">
+      <div class="border-t pt-4 mb-4"><label class="block text-sm font-medium text-gray-700 mb-2">📚 Selecione a Série/Ano (Opcional)</label> <select id="filter-serie" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"> <option value="">Todas as séries</option> </select>
+      </div>
+      <div class="border-t pt-4 mb-4"><label class="block text-sm font-medium text-gray-700 mb-2">👤 Buscar Aluno por Nome</label> <input type="text" id="filter-nome" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Digite o nome do aluno">
+      </div>
+     </div>
+     <div class="flex gap-3"><button id="btn-limpar-filtro" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-400"> Limpar Filtros </button>
+     </div>
+    </div><!-- Students Table (shown when filtered by school and series) -->
+    <div id="students-table-container" class="bg-white rounded-lg shadow-lg p-6 mb-8 hidden">
+     <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold text-gray-800">Tabela de Alunos - <span id="table-info"></span></h2><button id="btn-download-pdf" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 flex items-center gap-2">
+       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+       </svg> Baixar PDF </button>
+     </div>
+     <div class="overflow-x-auto">
+      <table class="w-full border-collapse" id="students-table">
+       <thead>
+        <tr class="bg-purple-600 text-white">
+         <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold">Nome Completo</th>
+         <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold">CPF</th>
+         <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold">Data Nasc.</th>
+         <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold">Idade</th>
+         <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold">Sexo</th>
+         <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold">Cor/Raça</th>
+         <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold">Localidade</th>
+         <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold">Transporte</th>
+         <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold">PCD</th>
+         <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold">Situação</th>
+        </tr>
+       </thead>
+       <tbody id="students-table-body"><!-- Table rows will be rendered here -->
+       </tbody>
+      </table>
+     </div>
+    </div><!-- Students List -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8" id="students-list-container">
+     <h2 class="text-2xl font-bold text-gray-800 mb-6">Lista de Alunos</h2>
+     <div id="students-list" class="space-y-4"><!-- Students will be rendered here -->
+     </div>
+     <div id="empty-state" class="text-center py-12">
+      <svg class="w-24 h-24 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+      </svg>
+      <p class="text-gray-500 text-lg">Nenhum aluno cadastrado ainda</p>
+      <p class="text-gray-400 text-sm mt-2">Clique em "Novo Cadastro" para adicionar o primeiro aluno</p>
+     </div>
+    </div>
+   </main><!-- Footer (Outside main container) -->
+   <footer class="w-full max-w-7xl mx-auto px-4 pb-8">
+    <div class="bg-white rounded-lg shadow-lg p-8 text-center">
+     <div class="mb-4">
+      <p class="text-xl font-bold text-gray-800 mb-3">📚 Secretaria Municipal de Cocal dos Alves</p>
+      <p class="text-purple-700 font-semibold italic text-lg">"Ensinando com amor, transformando com dedicação"</p>
+     </div>
+     <div class="pt-4 border-t border-gray-200">
+      <p class="text-base text-gray-600">Desenvolvido por <span class="font-bold text-purple-600">@FranciscoSilva</span></p>
+     </div>
+    </div>
+   </footer><!-- Modal for Export -->
+   <div id="export-modal" class="fixed inset-0 modal-overlay hidden items-center justify-center p-4" style="z-index: 999;">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full">
+     <div class="bg-green-600 text-white px-6 py-4 rounded-t-xl">
+      <h3 class="text-2xl font-bold">📊 Exportar Planilha Excel</h3>
+     </div>
+     <form id="export-form" class="p-6">
+      <div class="space-y-4">
+       <div><label for="export-escola" class="block text-sm font-medium text-gray-700 mb-2">🏫 Selecione a Escola *</label> <select id="export-escola" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"> <option value="">Escolha uma escola</option> </select>
+       </div>
+       <div id="export-serie-section" class="hidden"><label for="export-serie" class="block text-sm font-medium text-gray-700 mb-2">📚 Selecione a Série/Ano *</label> <select id="export-serie" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"> <option value="">Escolha uma série/ano</option> </select>
+       </div>
+       <div id="export-preview" class="hidden bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <p class="text-sm text-blue-800"><strong>Será exportado:</strong><br><span id="export-count">0</span> aluno(s) da <span id="export-school-name"></span> - <span id="export-serie-name"></span></p>
+       </div>
+      </div>
+      <div class="mt-6 flex gap-3 justify-end"><button type="button" id="btn-cancel-export" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50"> Cancelar </button> <button type="submit" id="btn-confirm-export" class="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 flex items-center gap-2" disabled>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+        </svg> Baixar Excel </button>
+      </div>
+     </form>
+    </div>
+   </div><!-- Modal for New/Edit Student -->
+   <div id="modal" class="fixed inset-0 modal-overlay hidden items-center justify-center p-4" style="z-index: 999;">
+    <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90%] overflow-y-auto">
+     <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+      <h3 id="modal-title" class="text-2xl font-bold text-gray-800">Novo Cadastro</h3><button id="btn-close-modal" class="text-gray-500 hover:text-gray-700">
+       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+       </svg></button>
+     </div>
+     <form id="student-form" class="p-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6"><!-- Nome Completo -->
+       <div class="md:col-span-2"><label for="nome_completo" class="block text-sm font-medium text-gray-700 mb-2">Nome Completo *</label> <input type="text" id="nome_completo" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+       </div><!-- CPF -->
+       <div><label for="cpf" class="block text-sm font-medium text-gray-700 mb-2">CPF *</label> <input type="text" id="cpf" required maxlength="14" placeholder="000.000.000-00" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+       </div><!-- Data de Nascimento -->
+       <div><label for="data_nascimento" class="block text-sm font-medium text-gray-700 mb-2">Data de Nascimento *</label> <input type="date" id="data_nascimento" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+       </div><!-- Idade -->
+       <div><label for="idade" class="block text-sm font-medium text-gray-700 mb-2">Idade *</label> <input type="number" id="idade" required min="0" max="100" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+       </div><!-- Sexo -->
+       <div><label for="sexo" class="block text-sm font-medium text-gray-700 mb-2">Sexo *</label> <select id="sexo" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"> <option value="">Selecione</option> <option value="Masculino">Masculino</option> <option value="Feminino">Feminino</option> </select>
+       </div><!-- Cor -->
+       <div><label for="cor" class="block text-sm font-medium text-gray-700 mb-2">Cor/Raça *</label> <select id="cor" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"> <option value="">Selecione</option> <option value="Branca">Branca</option> <option value="Preta">Preta</option> <option value="Parda">Parda</option> <option value="Amarela">Amarela</option> <option value="Indígena">Indígena</option> </select>
+       </div><!-- Localidade -->
+       <div><label for="localidade" class="block text-sm font-medium text-gray-700 mb-2">Localidade *</label> <input type="text" id="localidade" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+       </div><!-- Escola -->
+       <div><label for="escola" class="block text-sm font-medium text-gray-700 mb-2">Escola *</label> <input type="text" id="escola" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+       </div><!-- Série/Ano -->
+       <div><label for="serie_ano" class="block text-sm font-medium text-gray-700 mb-2">Série/Ano *</label> <select id="serie_ano" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"> <option value="">Selecione</option> <optgroup label="Educação Infantil"> <option value="Creche I">Creche I</option> <option value="Creche II">Creche II</option> <option value="Creche III">Creche III</option> <option value="Pré I">Pré I</option> <option value="Pré II">Pré II</option> </optgroup> <optgroup label="Ensino Fundamental - Anos Iniciais"> <option value="1º Ano">1º Ano</option> <option value="2º Ano">2º Ano</option> <option value="3º Ano">3º Ano</option> <option value="4º Ano">4º Ano</option> <option value="5º Ano">5º Ano</option> </optgroup> <optgroup label="Ensino Fundamental - Anos Finais"> <option value="6º Ano">6º Ano</option> <option value="7º Ano">7º Ano</option> <option value="8º Ano">8º Ano</option> <option value="9º Ano">9º Ano</option> </optgroup> </select>
+       </div><!-- Situação -->
+       <div><label for="situacao" class="block text-sm font-medium text-gray-700 mb-2">Situação *</label> <select id="situacao" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"> <option value="">Selecione</option> <option value="Ativo">Ativo</option> <option value="Transferido">Transferido</option> <option value="Evadido">Evadido</option> </select>
+       </div><!-- Checkboxes -->
+       <div class="md:col-span-2 flex gap-8"><label class="flex items-center cursor-pointer"> <input type="checkbox" id="usa_transporte" class="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"> <span class="ml-2 text-sm font-medium text-gray-700">Usa Transporte Escolar</span> </label> <label class="flex items-center cursor-pointer"> <input type="checkbox" id="pcd" class="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"> <span class="ml-2 text-sm font-medium text-gray-700">PCD</span> </label>
+       </div><!-- Nome do Pai -->
+       <div><label for="nome_pai" class="block text-sm font-medium text-gray-700 mb-2">Nome do Pai</label> <input type="text" id="nome_pai" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+       </div><!-- Nome da Mãe -->
+       <div><label for="nome_mae" class="block text-sm font-medium text-gray-700 mb-2">Nome da Mãe</label> <input type="text" id="nome_mae" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+       </div><!-- Endereço -->
+       <div class="md:col-span-2"><label for="endereco" class="block text-sm font-medium text-gray-700 mb-2">Endereço Completo</label> <textarea id="endereco" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"></textarea>
+       </div>
+      </div>
+      <div class="mt-6 flex gap-3 justify-end"><button type="button" id="btn-cancel" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50"> Cancelar </button> <button type="submit" id="btn-save" class="px-6 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700"> Salvar Aluno </button>
+      </div>
+     </form>
+    </div>
+   </div>
+  </div>
+  <script>
+    // Authentication
+    const USERS = [
+      { name: 'Francisco Silva', password: 'das496431', role: 'Administrador' },
+      { name: 'Gill��ne', password: 'semed123', role: 'Secretária de Educação' },
+      { name: 'Coordenadoras', password: 'semed123', role: 'Coordenadora' }
+    ];
+    let isAuthenticated = false;
+    let currentUser = '';
+    let currentUserRole = '';
+
+    // Check if user is already logged in
+    const savedUser = localStorage.getItem('logged_user');
+    const savedRole = localStorage.getItem('logged_role');
+    if (savedUser && savedRole) {
+      isAuthenticated = true;
+      currentUser = savedUser;
+      currentUserRole = savedRole;
+      showApp();
+    }
+
+    // Login Form Handler
+    document.getElementById('login-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const userIndex = document.getElementById('login-user').value;
+      const password = document.getElementById('login-password').value;
+      const errorDiv = document.getElementById('login-error');
+      
+      if (!userIndex) {
+        errorDiv.textContent = '❌ Selecione um usuário primeiro.';
+        errorDiv.classList.remove('hidden');
+        return;
+      }
+      
+      const selectedUser = USERS[parseInt(userIndex)];
+      
+      if (selectedUser && selectedUser.password === password) {
+        isAuthenticated = true;
+        currentUser = selectedUser.name;
+        currentUserRole = selectedUser.role;
+        localStorage.setItem('logged_user', selectedUser.name);
+        localStorage.setItem('logged_role', selectedUser.role);
+        errorDiv.classList.add('hidden');
+        showApp();
+        showToast(`Bem-vindo(a), ${selectedUser.name}!`, 'success');
+      } else {
+        errorDiv.textContent = '❌ Senha incorreta. Tente novamente.';
+        errorDiv.classList.remove('hidden');
+        document.getElementById('login-password').value = '';
+        document.getElementById('login-password').focus();
+      }
+    });
+
+    // Logout Handler
+    document.getElementById('btn-logout').addEventListener('click', () => {
+      isAuthenticated = false;
+      currentUser = '';
+      currentUserRole = '';
+      localStorage.removeItem('logged_user');
+      localStorage.removeItem('logged_role');
+      showLogin();
+      showToast('Logout realizado com sucesso', 'success');
+    });
+
+    function showApp() {
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('app').classList.remove('hidden');
+      document.getElementById('logged-user').textContent = `👤 ${currentUser} (${currentUserRole})`;
+    }
+
+    function showLogin() {
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('app').classList.add('hidden');
+      document.getElementById('login-form').reset();
+      document.getElementById('login-error').classList.add('hidden');
+    }
+
+    let allStudents = [];
+    let filteredStudents = [];
+    let editingStudent = null;
+    let isLoading = false;
+
+    const defaultConfig = {
+      titulo_sistema: "Cadastro de Alunos",
+      subtitulo: "Rede Municipal de Ensino",
+      background_color: "#667eea",
+      card_color: "#ffffff",
+      text_color: "#1f2937",
+      primary_button_color: "#7c3aed",
+      secondary_button_color: "#ffffff"
+    };
+
+    // Data SDK Handler
+    const dataHandler = {
+      onDataChanged(data) {
+        allStudents = data;
+        filteredStudents = data;
+        updateStats();
+        renderStudentsList();
+        
+        // Re-apply filters if any are active
+        const selectedSchool = document.getElementById('filter-escola').value;
+        const selectedSerie = document.getElementById('filter-serie').value;
+        if (selectedSchool || selectedSerie) {
+          applyFilters();
+        }
+      }
+    };
+
+    // Initialize Data SDK
+    (async () => {
+      const initResult = await window.dataSdk.init(dataHandler);
+      if (!initResult.isOk) {
+        showToast('Erro ao inicializar o sistema', 'error');
+      }
+    })();
+
+    // Element SDK
+    async function onConfigChange(config) {
+      const mainTitle = document.getElementById('main-title');
+      const subtitle = document.getElementById('subtitle');
+      
+      if (mainTitle) mainTitle.textContent = config.titulo_sistema || defaultConfig.titulo_sistema;
+      if (subtitle) subtitle.textContent = config.subtitulo || defaultConfig.subtitulo;
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities: (config) => ({
+          recolorables: [],
+          borderables: [],
+          fontEditable: undefined,
+          fontSizeable: undefined
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ["titulo_sistema", config.titulo_sistema || defaultConfig.titulo_sistema],
+          ["subtitulo", config.subtitulo || defaultConfig.subtitulo]
+        ])
+      });
+    }
+
+    // Toast Notification
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
+    }
+
+    // Update Stats
+    function updateStats() {
+      document.getElementById('total-alunos').textContent = allStudents.length;
+      document.getElementById('total-transporte').textContent = allStudents.filter(s => s.usa_transporte).length;
+      document.getElementById('total-pcd').textContent = allStudents.filter(s => s.pcd).length;
+    }
+
+    // Render Students Table
+    function renderStudentsTable(students, schoolName, serieName) {
+      const tableBody = document.getElementById('students-table-body');
+      const tableInfo = document.getElementById('table-info');
+      
+      tableInfo.textContent = `${schoolName} - ${serieName}`;
+      
+      tableBody.innerHTML = students.map(student => `
+        <tr class="hover:bg-gray-50">
+          <td class="border border-gray-300 px-4 py-3 text-sm">${student.nome_completo}</td>
+          <td class="border border-gray-300 px-4 py-3 text-sm">${student.cpf}</td>
+          <td class="border border-gray-300 px-4 py-3 text-sm">${new Date(student.data_nascimento).toLocaleDateString('pt-BR')}</td>
+          <td class="border border-gray-300 px-4 py-3 text-sm text-center">${student.idade}</td>
+          <td class="border border-gray-300 px-4 py-3 text-sm">${student.sexo}</td>
+          <td class="border border-gray-300 px-4 py-3 text-sm">${student.cor}</td>
+          <td class="border border-gray-300 px-4 py-3 text-sm">${student.localidade}</td>
+          <td class="border border-gray-300 px-4 py-3 text-sm text-center">${student.usa_transporte ? 'Sim' : 'Não'}</td>
+          <td class="border border-gray-300 px-4 py-3 text-sm text-center">${student.pcd ? 'Sim' : 'Não'}</td>
+          <td class="border border-gray-300 px-4 py-3 text-sm">
+            <span class="px-2 py-1 text-xs font-semibold rounded-full ${
+              student.situacao === 'Ativo' ? 'bg-green-100 text-green-800' :
+              student.situacao === 'Transferido' ? 'bg-blue-100 text-blue-800' :
+              'bg-red-100 text-red-800'
+            }">${student.situacao}</span>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Download PDF from Table
+    document.getElementById('btn-download-pdf').addEventListener('click', async () => {
+      try {
+        // Wait a moment to ensure libraries are loaded
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Check if jsPDF is loaded
+        if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
+          showToast('⚠️ Aguarde o carregamento das bibliotecas PDF...', 'error');
+          console.error('jsPDF não está carregado');
+          return;
+        }
+        
+        const { jsPDF } = window.jspdf;
+        
+        // Check if autoTable is available
+        if (typeof jsPDF.prototype.autoTable === 'undefined') {
+          showToast('⚠️ Extensão de tabela PDF não carregada. Recarregue a página.', 'error');
+          console.error('autoTable não está disponível');
+          return;
+        }
+        
+        const doc = new jsPDF('landscape', 'mm', 'a4');
+        
+        const schoolName = document.getElementById('table-info').textContent;
+        const currentDate = new Date().toLocaleDateString('pt-BR');
+        
+        // Add title
+        doc.setFontSize(16);
+        doc.text('Lista de Alunos', 148, 15, { align: 'center' });
+        
+        doc.setFontSize(12);
+        doc.text(schoolName, 148, 22, { align: 'center' });
+        
+        doc.setFontSize(10);
+        doc.text(`Data: ${currentDate}`, 148, 28, { align: 'center' });
+        
+        // Get table data
+        const tableBody = document.getElementById('students-table-body');
+        const rows = Array.from(tableBody.querySelectorAll('tr'));
+        
+        const tableData = rows.map(row => {
+          const cells = Array.from(row.querySelectorAll('td'));
+          return cells.map(cell => cell.textContent.trim());
+        });
+        
+        // Create PDF table using autoTable
+        doc.autoTable({
+          head: [['Nome', 'CPF', 'Data Nasc.', 'Idade', 'Sexo', 'Cor/Raça', 'Localidade', 'Transp.', 'PCD', 'Situação']],
+          body: tableData,
+          startY: 35,
+          styles: { 
+            fontSize: 8,
+            cellPadding: 2
+          },
+          headStyles: {
+            fillColor: [124, 58, 237],
+            textColor: 255,
+            fontStyle: 'bold'
+          },
+          alternateRowStyles: {
+            fillColor: [245, 245, 245]
+          },
+          columnStyles: {
+            0: { cellWidth: 40 }, // Nome
+            1: { cellWidth: 25 }, // CPF
+            2: { cellWidth: 22 }, // Data Nasc
+            3: { cellWidth: 12 }, // Idade
+            4: { cellWidth: 15 }, // Sexo
+            5: { cellWidth: 18 }, // Cor/Raça
+            6: { cellWidth: 30 }, // Localidade
+            7: { cellWidth: 15 }, // Transporte
+            8: { cellWidth: 12 }, // PCD
+            9: { cellWidth: 20 }  // Situação
+          },
+          margin: { top: 35, left: 10, right: 10 }
+        });
+        
+        // Add footer
+        const pageCount = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+          doc.setPage(i);
+          doc.setFontSize(8);
+          doc.text(
+            `Secretaria Municipal de Cocal dos Alves - Página ${i} de ${pageCount}`,
+            148,
+            205,
+            { align: 'center' }
+          );
+        }
+        
+        // Generate filename - clean it up for better compatibility
+        const cleanSchoolName = schoolName.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
+        const cleanDate = currentDate.replace(/\//g, '-');
+        const filename = `Lista_Alunos_${cleanSchoolName}_${cleanDate}.pdf`;
+        
+        // Save PDF to local machine
+        doc.save(filename);
+        
+        showToast('✅ PDF baixado com sucesso!', 'success');
+      } catch (error) {
+        console.error('Erro ao gerar PDF:', error);
+        showToast(`❌ Erro ao gerar PDF: ${error.message}`, 'error');
+      }
+    });
+
+    // Render Students List
+    function renderStudentsList() {
+      const container = document.getElementById('students-list');
+      const emptyState = document.getElementById('empty-state');
+      
+      if (filteredStudents.length === 0) {
+        container.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      
+      emptyState.classList.add('hidden');
+      container.innerHTML = filteredStudents.map(student => `
+        <div class="card border border-gray-200 rounded-lg p-5 hover:border-purple-300" data-id="${student.__backendId}">
+          <div class="flex justify-between items-start">
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-3">
+                <h3 class="text-xl font-bold text-gray-800">${student.nome_completo}</h3>
+                <span class="px-3 py-1 text-xs font-semibold rounded-full ${
+                  student.situacao === 'Ativo' ? 'bg-green-100 text-green-800' :
+                  student.situacao === 'Transferido' ? 'bg-blue-100 text-blue-800' :
+                  'bg-red-100 text-red-800'
+                }">${student.situacao}</span>
+              </div>
+              
+              <div class="grid grid-cols-2 md:grid-cols-6 gap-4 text-sm">
+                <div>
+                  <span class="text-gray-600">CPF:</span>
+                  <span class="font-medium text-gray-800 ml-1">${student.cpf}</span>
+                </div>
+                <div>
+                  <span class="text-gray-600">Idade:</span>
+                  <span class="font-medium text-gray-800 ml-1">${student.idade} anos</span>
+                </div>
+                <div>
+                  <span class="text-gray-600">Sexo:</span>
+                  <span class="font-medium text-gray-800 ml-1">${student.sexo}</span>
+                </div>
+                <div>
+                  <span class="text-gray-600">Série:</span>
+                  <span class="font-medium text-gray-800 ml-1">${student.serie_ano}</span>
+                </div>
+                <div>
+                  <span class="text-gray-600">Localidade:</span>
+                  <span class="font-medium text-gray-800 ml-1">${student.localidade}</span>
+                </div>
+                <div>
+                  <span class="text-gray-600">Escola:</span>
+                  <span class="font-medium text-gray-800 ml-1">${student.escola}</span>
+                </div>
+              </div>
+              
+              <div class="flex gap-4 mt-3">
+                ${student.usa_transporte ? '<span class="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full">🚌 Transporte</span>' : ''}
+                ${student.pcd ? '<span class="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full">♿ PCD</span>' : ''}
+              </div>
+            </div>
+            
+            <div class="flex gap-2 ml-4">
+              <button onclick="viewStudent('${student.__backendId}')" class="text-blue-600 hover:text-blue-800 p-2" title="Ver detalhes">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+              </button>
+              <button onclick="editStudent('${student.__backendId}')" class="text-green-600 hover:text-green-800 p-2" title="Editar">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+              </button>
+              <button onclick="confirmDelete('${student.__backendId}')" class="text-red-600 hover:text-red-800 p-2" title="Excluir">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Modal Functions
+    function openModal(title = 'Novo Cadastro') {
+      document.getElementById('modal-title').textContent = title;
+      document.getElementById('modal').classList.remove('hidden');
+      document.getElementById('modal').classList.add('flex');
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.add('hidden');
+      document.getElementById('modal').classList.remove('flex');
+      document.getElementById('student-form').reset();
+      editingStudent = null;
+    }
+
+    // New Student
+    document.getElementById('btn-novo').addEventListener('click', () => {
+      if (allStudents.length >= 999) {
+        showToast('Limite máximo de 999 alunos atingido', 'error');
+        return;
+      }
+      openModal('Novo Cadastro');
+    });
+
+    // Close Modal
+    document.getElementById('btn-close-modal').addEventListener('click', closeModal);
+    document.getElementById('btn-cancel').addEventListener('click', closeModal);
+
+    // View Student Details
+    window.viewStudent = (id) => {
+      const student = allStudents.find(s => s.__backendId === id);
+      if (!student) return;
+
+      const detailsHtml = `
+        <div class="space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div><strong>Nome Completo:</strong> ${student.nome_completo}</div>
+            <div><strong>CPF:</strong> ${student.cpf}</div>
+            <div><strong>Data de Nascimento:</strong> ${new Date(student.data_nascimento).toLocaleDateString('pt-BR')}</div>
+            <div><strong>Idade:</strong> ${student.idade} anos</div>
+            <div><strong>Sexo:</strong> ${student.sexo}</div>
+            <div><strong>Cor/Raça:</strong> ${student.cor}</div>
+            <div><strong>Localidade:</strong> ${student.localidade}</div>
+            <div><strong>Escola:</strong> ${student.escola}</div>
+            <div><strong>Série/Ano:</strong> ${student.serie_ano}</div>
+            <div><strong>Situação:</strong> ${student.situacao}</div>
+            <div><strong>Transporte:</strong> ${student.usa_transporte ? 'Sim' : 'Não'}</div>
+            <div><strong>PCD:</strong> ${student.pcd ? 'Sim' : 'Não'}</div>
+            <div><strong>Nome do Pai:</strong> ${student.nome_pai || 'Não informado'}</div>
+            <div><strong>Nome da Mãe:</strong> ${student.nome_mae || 'Não informado'}</div>
+            <div class="col-span-2"><strong>Endereço:</strong> ${student.endereco || 'Não informado'}</div>
+          </div>
+        </div>
+      `;
+
+      const modal = document.getElementById('modal');
+      modal.querySelector('.max-w-4xl').innerHTML = `
+        <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+          <h3 class="text-2xl font-bold text-gray-800">Detalhes do Aluno</h3>
+          <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="p-6">
+          ${detailsHtml}
+          <div class="mt-6 flex justify-end">
+            <button onclick="closeModal()" class="px-6 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700">
+              Fechar
+            </button>
+          </div>
+        </div>
+      `;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    };
+
+    // Edit Student
+    window.editStudent = (id) => {
+      const student = allStudents.find(s => s.__backendId === id);
+      if (!student) return;
+
+      editingStudent = student;
+      openModal('Editar Aluno');
+
+      document.getElementById('nome_completo').value = student.nome_completo;
+      document.getElementById('cpf').value = student.cpf;
+      document.getElementById('data_nascimento').value = student.data_nascimento;
+      document.getElementById('idade').value = student.idade;
+      document.getElementById('sexo').value = student.sexo;
+      document.getElementById('cor').value = student.cor;
+      document.getElementById('localidade').value = student.localidade;
+      document.getElementById('escola').value = student.escola;
+      document.getElementById('serie_ano').value = student.serie_ano;
+      document.getElementById('situacao').value = student.situacao;
+      document.getElementById('usa_transporte').checked = student.usa_transporte;
+      document.getElementById('pcd').checked = student.pcd;
+      document.getElementById('nome_pai').value = student.nome_pai || '';
+      document.getElementById('nome_mae').value = student.nome_mae || '';
+      document.getElementById('endereco').value = student.endereco || '';
+    };
+
+    // Confirm Delete
+    window.confirmDelete = (id) => {
+      const student = allStudents.find(s => s.__backendId === id);
+      if (!student) return;
+
+      const card = document.querySelector(`[data-id="${id}"]`);
+      const originalContent = card.innerHTML;
+      
+      card.innerHTML = `
+        <div class="flex items-center justify-between">
+          <p class="text-lg font-semibold text-red-600">Confirmar exclusão de ${student.nome_completo}?</p>
+          <div class="flex gap-2">
+            <button onclick="deleteStudent('${id}')" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+              Confirmar
+            </button>
+            <button onclick="cancelDelete('${id}', \`${originalContent.replace(/`/g, '\\`')}\`)" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      `;
+    };
+
+    window.cancelDelete = (id, originalContent) => {
+      const card = document.querySelector(`[data-id="${id}"]`);
+      card.innerHTML = originalContent;
+    };
+
+    // Delete Student
+    window.deleteStudent = async (id) => {
+      const student = allStudents.find(s => s.__backendId === id);
+      if (!student || isLoading) return;
+
+      isLoading = true;
+      const card = document.querySelector(`[data-id="${id}"]`);
+      card.style.opacity = '0.5';
+
+      const result = await window.dataSdk.delete(student);
+      
+      isLoading = false;
+
+      if (result.isOk) {
+        showToast('Aluno excluído com sucesso', 'success');
+      } else {
+        card.style.opacity = '1';
+        showToast('Erro ao excluir aluno', 'error');
+      }
+    };
+
+    // Form Submit
+    document.getElementById('student-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      if (isLoading) return;
+
+      const formData = {
+        nome_completo: document.getElementById('nome_completo').value,
+        cpf: document.getElementById('cpf').value,
+        data_nascimento: document.getElementById('data_nascimento').value,
+        idade: parseInt(document.getElementById('idade').value),
+        sexo: document.getElementById('sexo').value,
+        cor: document.getElementById('cor').value,
+        localidade: document.getElementById('localidade').value,
+        escola: document.getElementById('escola').value,
+        usa_transporte: document.getElementById('usa_transporte').checked,
+        serie_ano: document.getElementById('serie_ano').value,
+        situacao: document.getElementById('situacao').value,
+        pcd: document.getElementById('pcd').checked,
+        nome_pai: document.getElementById('nome_pai').value,
+        nome_mae: document.getElementById('nome_mae').value,
+        endereco: document.getElementById('endereco').value,
+        data_cadastro: new Date().toISOString()
+      };
+
+      isLoading = true;
+      const btnSave = document.getElementById('btn-save');
+      btnSave.disabled = true;
+      btnSave.textContent = 'Salvando...';
+
+      let result;
+      if (editingStudent) {
+        result = await window.dataSdk.update({ ...formData, __backendId: editingStudent.__backendId });
+      } else {
+        if (allStudents.length >= 999) {
+          showToast('Limite máximo de 999 alunos atingido', 'error');
+          isLoading = false;
+          btnSave.disabled = false;
+          btnSave.textContent = 'Salvar Aluno';
+          return;
+        }
+        result = await window.dataSdk.create(formData);
+      }
+
+      isLoading = false;
+      btnSave.disabled = false;
+      btnSave.textContent = 'Salvar Aluno';
+
+      if (result.isOk) {
+        showToast(editingStudent ? 'Aluno atualizado com sucesso' : 'Aluno cadastrado com sucesso', 'success');
+        closeModal();
+      } else {
+        showToast('Erro ao salvar aluno', 'error');
+      }
+    });
+
+    // CPF Formatting
+    document.getElementById('cpf').addEventListener('input', (e) => {
+      let value = e.target.value.replace(/\D/g, '');
+      if (value.length > 11) value = value.slice(0, 11);
+      
+      if (value.length > 9) {
+        value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+      } else if (value.length > 6) {
+        value = value.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+      } else if (value.length > 3) {
+        value = value.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+      }
+      
+      e.target.value = value;
+    });
+
+    // Update School Filter Options
+    function updateSchoolOptions() {
+      const schoolSelect = document.getElementById('filter-escola');
+      const schools = [...new Set(allStudents.map(s => s.escola))].sort();
+      
+      schoolSelect.innerHTML = '<option value="">Todas as escolas</option>' + 
+        schools.map(school => `<option value="${school}">${school}</option>`).join('');
+    }
+
+    // Update Series Filter Options based on selected school
+    function updateSeriesOptions(selectedSchool) {
+      const seriesSelect = document.getElementById('filter-serie');
+      const series = [...new Set(
+        allStudents
+          .filter(s => s.escola === selectedSchool)
+          .map(s => s.serie_ano)
+      )].sort();
+      
+      seriesSelect.innerHTML = '<option value="">Todas as séries</option>' + 
+        series.map(serie => `<option value="${serie}">${serie}</option>`).join('');
+    }
+
+    // Apply all filters
+    function applyFilters() {
+      const selectedSchool = document.getElementById('filter-escola').value;
+      const selectedSerie = document.getElementById('filter-serie').value;
+      const nome = document.getElementById('filter-nome').value.toLowerCase();
+      
+      filteredStudents = allStudents.filter(student => {
+        const matchSchool = !selectedSchool || student.escola === selectedSchool;
+        const matchSerie = !selectedSerie || student.serie_ano === selectedSerie;
+        const matchNome = !nome || student.nome_completo.toLowerCase().includes(nome);
+        
+        return matchSchool && matchSerie && matchNome;
+      });
+      
+      // Show table if both school and series are selected
+      const tableContainer = document.getElementById('students-table-container');
+      const listContainer = document.getElementById('students-list-container');
+      
+      if (selectedSchool && selectedSerie) {
+        renderStudentsTable(filteredStudents, selectedSchool, selectedSerie);
+        tableContainer.classList.remove('hidden');
+        listContainer.classList.add('hidden');
+      } else {
+        tableContainer.classList.add('hidden');
+        listContainer.classList.remove('hidden');
+        renderStudentsList();
+      }
+      
+      showToast(`${filteredStudents.length} aluno(s) encontrado(s)`, 'success');
+    }
+
+    // Filter Functions
+    document.getElementById('btn-filtrar').addEventListener('click', () => {
+      const filterSection = document.getElementById('filter-section');
+      filterSection.classList.toggle('hidden');
+      if (!filterSection.classList.contains('hidden')) {
+        updateSchoolOptions();
+      }
+    });
+
+    document.getElementById('filter-escola').addEventListener('change', (e) => {
+      const selectedSchool = e.target.value;
+      const nameFilterSection = document.getElementById('escola-selected-filter');
+      const seriesSelect = document.getElementById('filter-serie');
+      
+      if (selectedSchool) {
+        nameFilterSection.classList.remove('hidden');
+        updateSeriesOptions(selectedSchool);
+        seriesSelect.value = '';
+        document.getElementById('filter-nome').value = '';
+        applyFilters();
+      } else {
+        nameFilterSection.classList.add('hidden');
+        seriesSelect.value = '';
+        document.getElementById('filter-nome').value = '';
+        filteredStudents = allStudents;
+        
+        // Hide table, show list
+        document.getElementById('students-table-container').classList.add('hidden');
+        document.getElementById('students-list-container').classList.remove('hidden');
+        renderStudentsList();
+      }
+    });
+
+    document.getElementById('filter-serie').addEventListener('change', () => {
+      applyFilters();
+    });
+
+    document.getElementById('filter-nome').addEventListener('input', () => {
+      const selectedSchool = document.getElementById('filter-escola').value;
+      if (selectedSchool) {
+        applyFilters();
+      }
+    });
+
+    document.getElementById('btn-limpar-filtro').addEventListener('click', () => {
+      document.getElementById('filter-escola').value = '';
+      document.getElementById('filter-serie').value = '';
+      document.getElementById('filter-nome').value = '';
+      document.getElementById('escola-selected-filter').classList.add('hidden');
+      
+      // Hide table, show list
+      document.getElementById('students-table-container').classList.add('hidden');
+      document.getElementById('students-list-container').classList.remove('hidden');
+      
+      filteredStudents = allStudents;
+      renderStudentsList();
+      showToast('Filtros limpos', 'success');
+    });
+
+    // Export Functions
+    document.getElementById('btn-exportar').addEventListener('click', () => {
+      const exportModal = document.getElementById('export-modal');
+      exportModal.classList.remove('hidden');
+      exportModal.classList.add('flex');
+      
+      // Populate schools
+      const exportSchoolSelect = document.getElementById('export-escola');
+      const schools = [...new Set(allStudents.map(s => s.escola))].sort();
+      exportSchoolSelect.innerHTML = '<option value="">Escolha uma escola</option>' + 
+        schools.map(school => `<option value="${school}">${school}</option>`).join('');
+    });
+
+    document.getElementById('btn-cancel-export').addEventListener('click', () => {
+      closeExportModal();
+    });
+
+    function closeExportModal() {
+      document.getElementById('export-modal').classList.add('hidden');
+      document.getElementById('export-modal').classList.remove('flex');
+      document.getElementById('export-form').reset();
+      document.getElementById('export-serie-section').classList.add('hidden');
+      document.getElementById('export-preview').classList.add('hidden');
+      document.getElementById('btn-confirm-export').disabled = true;
+    }
+
+    document.getElementById('export-escola').addEventListener('change', (e) => {
+      const selectedSchool = e.target.value;
+      const serieSection = document.getElementById('export-serie-section');
+      const previewSection = document.getElementById('export-preview');
+      
+      if (selectedSchool) {
+        serieSection.classList.remove('hidden');
+        
+        // Populate series for selected school
+        const exportSerieSelect = document.getElementById('export-serie');
+        const series = [...new Set(
+          allStudents
+            .filter(s => s.escola === selectedSchool)
+            .map(s => s.serie_ano)
+        )].sort();
+        
+        exportSerieSelect.innerHTML = '<option value="">Escolha uma série/ano</option>' + 
+          series.map(serie => `<option value="${serie}">${serie}</option>`).join('');
+        
+        previewSection.classList.add('hidden');
+        document.getElementById('btn-confirm-export').disabled = true;
+      } else {
+        serieSection.classList.add('hidden');
+        previewSection.classList.add('hidden');
+        document.getElementById('btn-confirm-export').disabled = true;
+      }
+    });
+
+    document.getElementById('export-serie').addEventListener('change', (e) => {
+      const selectedSchool = document.getElementById('export-escola').value;
+      const selectedSerie = e.target.value;
+      const previewSection = document.getElementById('export-preview');
+      const confirmBtn = document.getElementById('btn-confirm-export');
+      
+      if (selectedSerie && selectedSchool) {
+        const studentsToExport = allStudents.filter(s => 
+          s.escola === selectedSchool && s.serie_ano === selectedSerie
+        );
+        
+        document.getElementById('export-count').textContent = studentsToExport.length;
+        document.getElementById('export-school-name').textContent = selectedSchool;
+        document.getElementById('export-serie-name').textContent = selectedSerie;
+        
+        previewSection.classList.remove('hidden');
+        confirmBtn.disabled = studentsToExport.length === 0;
+      } else {
+        previewSection.classList.add('hidden');
+        confirmBtn.disabled = true;
+      }
+    });
+
+    document.getElementById('export-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const selectedSchool = document.getElementById('export-escola').value;
+      const selectedSerie = document.getElementById('export-serie').value;
+      
+      if (!selectedSchool || !selectedSerie) return;
+      
+      // Filter students
+      const studentsToExport = allStudents.filter(s => 
+        s.escola === selectedSchool && s.serie_ano === selectedSerie
+      );
+      
+      if (studentsToExport.length === 0) {
+        showToast('Nenhum aluno encontrado para exportar', 'error');
+        return;
+      }
+      
+      // Prepare data for Excel
+      const excelData = studentsToExport.map(student => ({
+        'Nome Completo': student.nome_completo,
+        'CPF': student.cpf,
+        'Data de Nascimento': new Date(student.data_nascimento).toLocaleDateString('pt-BR'),
+        'Idade': student.idade,
+        'Sexo': student.sexo,
+        'Cor/Raça': student.cor,
+        'Localidade': student.localidade,
+        'Escola': student.escola,
+        'Série/Ano': student.serie_ano,
+        'Situação': student.situacao,
+        'Usa Transporte': student.usa_transporte ? 'Sim' : 'Não',
+        'PCD': student.pcd ? 'Sim' : 'Não',
+        'Nome do Pai': student.nome_pai || '',
+        'Nome da Mãe': student.nome_mae || '',
+        'Endereço': student.endereco || ''
+      }));
+      
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(excelData);
+      
+      // Set column widths
+      ws['!cols'] = [
+        { wch: 30 }, // Nome Completo
+        { wch: 15 }, // CPF
+        { wch: 18 }, // Data de Nascimento
+        { wch: 8 },  // Idade
+        { wch: 12 }, // Sexo
+        { wch: 12 }, // Cor/Raça
+        { wch: 20 }, // Localidade
+        { wch: 25 }, // Escola
+        { wch: 15 }, // Série/Ano
+        { wch: 12 }, // Situação
+        { wch: 15 }, // Usa Transporte
+        { wch: 8 },  // PCD
+        { wch: 30 }, // Nome do Pai
+        { wch: 30 }, // Nome da Mãe
+        { wch: 40 }  // Endere����o
+      ];
+      
+      XLSX.utils.book_append_sheet(wb, ws, 'Alunos');
+      
+      // Generate filename
+      const filename = `Alunos_${selectedSchool.replace(/\s+/g, '_')}_${selectedSerie.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      
+      // Download file
+      XLSX.writeFile(wb, filename);
+      
+      showToast(`Planilha exportada com sucesso! ${studentsToExport.length} aluno(s)`, 'success');
+      closeExportModal();
+    });
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b9d404ab345f638',t:'MTc2NzcyMzg1NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
