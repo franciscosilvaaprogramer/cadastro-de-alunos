@@ -3,11 +3,14 @@
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistema de Cadastro de Alunos - Rede Municipal</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+  <meta name="description" content="Sistema de Cadastro de Alunos - Secretaria Municipal de Cocal dos Alves">
+  <meta name="author" content="Francisco Silva">
+  <title>Sistema de Cadastro de Alunos - Rede Municipal</title><!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script><!-- SheetJS para exportação Excel -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script><!-- jsPDF para geração de PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><!-- jsPDF AutoTable para tabelas em PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js" integrity="sha512-oKMuiUY6FHJrOdsD/1TObFLNLaaD/x+7F0TM8VVH8V6TIqpQJkLMJn7fJrpf5rQJ3j6qXJA8E4syEJsN8CtUXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
   <style>
     body {
       box-sizing: border-box;
@@ -485,27 +488,19 @@
           Gerando PDF...
         `;
         
-        // Aguarda um pouco para garantir que as bibliotecas carregaram
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
         // Verifica se jsPDF está disponível
-        if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
-          showToast('⚠️ Biblioteca PDF ainda não carregou. Recarregue a página e tente novamente.', 'error');
-          downloadBtn.disabled = false;
-          downloadBtn.innerHTML = originalBtnHTML;
-          return;
+        if (typeof window.jspdf === 'undefined') {
+          throw new Error('Biblioteca jsPDF não carregada');
         }
         
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('landscape', 'mm', 'a4');
         
-        // Verifica se autoTable est���� disponível
-        if (typeof doc.autoTable !== 'function') {
-          showToast('⚠️ Extensão de tabela não disponível. Recarregue a página.', 'error');
-          downloadBtn.disabled = false;
-          downloadBtn.innerHTML = originalBtnHTML;
-          return;
+        // Verifica se autoTable está disponível
+        if (!jsPDF.API || typeof jsPDF.API.autoTable !== 'function') {
+          throw new Error('Extensão autoTable não disponível');
         }
+        
+        const doc = new jsPDF('landscape', 'mm', 'a4');
         
         const schoolName = document.getElementById('table-info').textContent;
         const currentDate = new Date().toLocaleDateString('pt-BR');
@@ -582,7 +577,7 @@
           );
         }
         
-        // Gera o nome do arquivo limpo (sem acentos e caracteres especiais)
+        // Gera o nome do arquivo limpo
         const cleanSchoolName = schoolName
           .normalize('NFD')
           .replace(/[\u0300-\u036f]/g, '')
@@ -593,16 +588,16 @@
         const timestamp = new Date().toISOString().slice(0, 10);
         const filename = `Lista_Alunos_${cleanSchoolName}_${timestamp}.pdf`;
         
-        // Usa o método save() nativo do jsPDF (download direto)
+        // Salva o PDF
         doc.save(filename);
         
-        showToast('✅ PDF baixado! Verifique sua pasta de Downloads', 'success');
+        showToast('✅ PDF baixado com sucesso!', 'success');
         
       } catch (error) {
         console.error('Erro ao gerar PDF:', error);
-        showToast(`❌ Erro ao gerar PDF: ${error.message}`, 'error');
+        showToast(`❌ Erro ao gerar PDF: ${error.message}. Recarregue a página e tente novamente.`, 'error');
       } finally {
-        // Restaura o botão após um pequeno delay
+        // Restaura o botão
         setTimeout(() => {
           downloadBtn.disabled = false;
           downloadBtn.innerHTML = originalBtnHTML;
@@ -847,21 +842,31 @@
         nome_pai: document.getElementById('nome_pai').value,
         nome_mae: document.getElementById('nome_mae').value,
         endereco: document.getElementById('endereco').value,
-        data_cadastro: new Date().toISOString()
+        data_cadastro: editingStudent !== null ? allStudents[editingStudent].data_cadastro : new Date().toISOString()
       };
 
       if (editingStudent !== null) {
         allStudents[editingStudent] = formData;
-        showToast('Aluno atualizado com sucesso', 'success');
+        showToast('✅ Aluno atualizado com sucesso!', 'success');
       } else {
         allStudents.push(formData);
-        showToast('Aluno cadastrado com sucesso', 'success');
+        showToast('✅ Aluno cadastrado com sucesso!', 'success');
       }
 
       saveStudents();
-      filteredStudents = allStudents;
+      
+      // Reaplica filtros se estiverem ativos
+      const selectedSchool = document.getElementById('filter-escola').value;
+      const selectedSerie = document.getElementById('filter-serie').value;
+      
+      if (selectedSchool || selectedSerie) {
+        applyFilters();
+      } else {
+        filteredStudents = allStudents;
+        renderStudentsList();
+      }
+      
       updateStats();
-      renderStudentsList();
       closeModal();
     });
 
@@ -1119,5 +1124,5 @@
       closeExportModal();
     });
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b9d987a2046f62c',t:'MTc2NzcyNzQ2Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b9d9fc37759f614',t:'MTc2NzcyNzc2NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
