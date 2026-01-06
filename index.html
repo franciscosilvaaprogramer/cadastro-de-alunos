@@ -299,7 +299,14 @@
       isAuthenticated = true;
       currentUser = savedUser;
       currentUserRole = savedRole;
-      showApp();
+      
+      // Hide login screen and show app immediately
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('app').classList.remove('hidden');
+      document.getElementById('logged-user').textContent = `👤 ${currentUser} (${currentUserRole})`;
+      
+      // Load students data
+      loadStudents();
     }
 
     // Login Form Handler
@@ -364,7 +371,7 @@
     let filteredStudents = [];
     let editingStudent = null;
 
-    // LocalStorage Data Management
+    // LocalStorage Data Management with Auto-Sync
     function loadStudents() {
       const stored = localStorage.getItem('students_data');
       if (stored) {
@@ -377,7 +384,34 @@
 
     function saveStudents() {
       localStorage.setItem('students_data', JSON.stringify(allStudents));
+      // Trigger storage event for other tabs/windows
+      localStorage.setItem('students_sync_timestamp', Date.now().toString());
     }
+
+    // Listen for changes from other tabs/windows
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'students_sync_timestamp' || e.key === 'students_data') {
+        const stored = localStorage.getItem('students_data');
+        if (stored) {
+          allStudents = JSON.parse(stored);
+          
+          // Maintain current filters if active
+          const selectedSchool = document.getElementById('filter-escola').value;
+          const selectedSerie = document.getElementById('filter-serie').value;
+          const nome = document.getElementById('filter-nome').value;
+          
+          if (selectedSchool || selectedSerie || nome) {
+            applyFilters();
+          } else {
+            filteredStudents = allStudents;
+            renderStudentsList();
+          }
+          
+          updateStats();
+          showToast('✨ Dados atualizados de outro dispositivo!', 'success');
+        }
+      }
+    });
 
     // Toast Notification
     function showToast(message, type = 'success') {
@@ -517,7 +551,7 @@
         
         doc.save(filename);
         
-        showToast('✅ PDF baixado com sucesso!', 'success');
+        showToast('��� PDF baixado com sucesso!', 'success');
       } catch (error) {
         console.error('Erro ao gerar PDF:', error);
         showToast(`❌ Erro ao gerar PDF: ${error.message}`, 'error');
@@ -1033,5 +1067,5 @@
       closeExportModal();
     });
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b9d6489637f4f7e',t:'MTc2NzcyNTMzOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b9d6f5f7352f623',t:'MTc2NzcyNTc4My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
