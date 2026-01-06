@@ -6,8 +6,8 @@
   <title>Sistema de Cadastro de Alunos - Rede Municipal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js" integrity="sha512-4vRWC4XIIhb4PPR3j7yVMRLewlR8OzKfKEH/gk1j4RwzmONRCLZvYnoFYcYpEoN4fhvNfYJb6z8ZjjRoA8M2Nw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
   <style>
     body {
       box-sizing: border-box;
@@ -68,6 +68,14 @@
 
     .card:hover {
       box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .animate-spin {
+      animation: spin 1s linear infinite;
     }
   </style>
   <style>@view-transition { navigation: auto; }</style>
@@ -463,37 +471,57 @@
 
     // Download PDF from Table
     document.getElementById('btn-download-pdf').addEventListener('click', async () => {
+      const downloadBtn = document.getElementById('btn-download-pdf');
+      const originalBtnHTML = downloadBtn.innerHTML;
+      
       try {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Mostra estado de carregamento
+        downloadBtn.disabled = true;
+        downloadBtn.innerHTML = `
+          <svg class="animate-spin h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Gerando PDF...
+        `;
         
+        // Verifica se jsPDF está disponível
         if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
-          showToast('⚠️ Aguarde o carregamento das bibliotecas PDF...', 'error');
-          console.error('jsPDF não está carregado');
+          showToast('⚠️ Biblioteca PDF ainda não carregou. Aguarde e tente novamente.', 'error');
+          downloadBtn.disabled = false;
+          downloadBtn.innerHTML = originalBtnHTML;
           return;
         }
         
         const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('landscape', 'mm', 'a4');
         
-        if (typeof jsPDF.prototype.autoTable === 'undefined') {
-          showToast('⚠️ Extensão de tabela PDF não carregada. Recarregue a página.', 'error');
-          console.error('autoTable não está disponível');
+        // Verifica se autoTable está disponível
+        if (typeof doc.autoTable !== 'function') {
+          showToast('⚠️ Extensão de tabela não disponível. Recarregue a página.', 'error');
+          downloadBtn.disabled = false;
+          downloadBtn.innerHTML = originalBtnHTML;
           return;
         }
-        
-        const doc = new jsPDF('landscape', 'mm', 'a4');
         
         const schoolName = document.getElementById('table-info').textContent;
         const currentDate = new Date().toLocaleDateString('pt-BR');
         
+        // Título principal
         doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
         doc.text('Lista de Alunos', 148, 15, { align: 'center' });
         
+        // Subtítulo com escola e série
         doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
         doc.text(schoolName, 148, 22, { align: 'center' });
         
+        // Data
         doc.setFontSize(10);
         doc.text(`Data: ${currentDate}`, 148, 28, { align: 'center' });
         
+        // Captura os dados da tabela
         const tableBody = document.getElementById('students-table-body');
         const rows = Array.from(tableBody.querySelectorAll('tr'));
         
@@ -502,41 +530,47 @@
           return cells.map(cell => cell.textContent.trim());
         });
         
+        // Cria a tabela
         doc.autoTable({
           head: [['Nome', 'CPF', 'Data Nasc.', 'Idade', 'Sexo', 'Cor/Raça', 'Localidade', 'Transp.', 'PCD', 'Situação']],
           body: tableData,
           startY: 35,
           styles: { 
             fontSize: 8,
-            cellPadding: 2
+            cellPadding: 2,
+            lineColor: [200, 200, 200],
+            lineWidth: 0.1
           },
           headStyles: {
             fillColor: [124, 58, 237],
             textColor: 255,
-            fontStyle: 'bold'
+            fontStyle: 'bold',
+            halign: 'center'
           },
           alternateRowStyles: {
             fillColor: [245, 245, 245]
           },
           columnStyles: {
-            0: { cellWidth: 40 },
-            1: { cellWidth: 25 },
-            2: { cellWidth: 22 },
-            3: { cellWidth: 12 },
-            4: { cellWidth: 15 },
-            5: { cellWidth: 18 },
-            6: { cellWidth: 30 },
-            7: { cellWidth: 15 },
-            8: { cellWidth: 12 },
-            9: { cellWidth: 20 }
+            0: { cellWidth: 40, halign: 'left' },
+            1: { cellWidth: 25, halign: 'center' },
+            2: { cellWidth: 22, halign: 'center' },
+            3: { cellWidth: 12, halign: 'center' },
+            4: { cellWidth: 15, halign: 'center' },
+            5: { cellWidth: 18, halign: 'center' },
+            6: { cellWidth: 30, halign: 'left' },
+            7: { cellWidth: 15, halign: 'center' },
+            8: { cellWidth: 12, halign: 'center' },
+            9: { cellWidth: 20, halign: 'center' }
           },
           margin: { top: 35, left: 10, right: 10 }
         });
         
+        // Adiciona rodapé em todas as páginas
         const pageCount = doc.internal.getNumberOfPages();
         for (let i = 1; i <= pageCount; i++) {
           doc.setPage(i);
           doc.setFontSize(8);
+          doc.setTextColor(100);
           doc.text(
             `Secretaria Municipal de Cocal dos Alves - Página ${i} de ${pageCount}`,
             148,
@@ -545,16 +579,22 @@
           );
         }
         
+        // Gera o nome do arquivo
         const cleanSchoolName = schoolName.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
         const cleanDate = currentDate.replace(/\//g, '-');
         const filename = `Lista_Alunos_${cleanSchoolName}_${cleanDate}.pdf`;
         
+        // Salva o PDF - faz o download automático
         doc.save(filename);
         
-        showToast('��� PDF baixado com sucesso!', 'success');
+        showToast('✅ PDF baixado com sucesso!', 'success');
+        
       } catch (error) {
-        console.error('Erro ao gerar PDF:', error);
         showToast(`❌ Erro ao gerar PDF: ${error.message}`, 'error');
+      } finally {
+        // Restaura o botão
+        downloadBtn.disabled = false;
+        downloadBtn.innerHTML = originalBtnHTML;
       }
     });
 
@@ -1067,5 +1107,5 @@
       closeExportModal();
     });
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b9d6f5f7352f623',t:'MTc2NzcyNTc4My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b9d86cf909af637',t:'MTc2NzcyNjc0My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
