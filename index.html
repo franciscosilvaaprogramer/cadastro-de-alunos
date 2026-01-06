@@ -192,7 +192,7 @@
          <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold">Localidade</th>
          <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold">Transporte</th>
          <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold">PCD</th>
-         <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold">Situação</th>
+         <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold">Situa��ão</th>
         </tr>
        </thead>
        <tbody id="students-table-body"><!-- Table rows will be rendered here -->
@@ -485,9 +485,12 @@
           Gerando PDF...
         `;
         
+        // Aguarda um pouco para garantir que as bibliotecas carregaram
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         // Verifica se jsPDF está disponível
         if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
-          showToast('⚠️ Biblioteca PDF ainda não carregou. Aguarde e tente novamente.', 'error');
+          showToast('⚠️ Biblioteca PDF ainda não carregou. Recarregue a página e tente novamente.', 'error');
           downloadBtn.disabled = false;
           downloadBtn.innerHTML = originalBtnHTML;
           return;
@@ -496,7 +499,7 @@
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('landscape', 'mm', 'a4');
         
-        // Verifica se autoTable está disponível
+        // Verifica se autoTable est���� disponível
         if (typeof doc.autoTable !== 'function') {
           showToast('⚠️ Extensão de tabela não disponível. Recarregue a página.', 'error');
           downloadBtn.disabled = false;
@@ -579,22 +582,31 @@
           );
         }
         
-        // Gera o nome do arquivo
-        const cleanSchoolName = schoolName.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
-        const cleanDate = currentDate.replace(/\//g, '-');
-        const filename = `Lista_Alunos_${cleanSchoolName}_${cleanDate}.pdf`;
+        // Gera o nome do arquivo limpo (sem acentos e caracteres especiais)
+        const cleanSchoolName = schoolName
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-zA-Z0-9\s]/g, '')
+          .replace(/\s+/g, '_')
+          .substring(0, 50);
         
-        // Salva o PDF - faz o download automático
+        const timestamp = new Date().toISOString().slice(0, 10);
+        const filename = `Lista_Alunos_${cleanSchoolName}_${timestamp}.pdf`;
+        
+        // Usa o método save() nativo do jsPDF (download direto)
         doc.save(filename);
         
-        showToast('✅ PDF baixado com sucesso!', 'success');
+        showToast('✅ PDF baixado! Verifique sua pasta de Downloads', 'success');
         
       } catch (error) {
+        console.error('Erro ao gerar PDF:', error);
         showToast(`❌ Erro ao gerar PDF: ${error.message}`, 'error');
       } finally {
-        // Restaura o botão
-        downloadBtn.disabled = false;
-        downloadBtn.innerHTML = originalBtnHTML;
+        // Restaura o botão após um pequeno delay
+        setTimeout(() => {
+          downloadBtn.disabled = false;
+          downloadBtn.innerHTML = originalBtnHTML;
+        }, 800);
       }
     });
 
@@ -1107,5 +1119,5 @@
       closeExportModal();
     });
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b9d86cf909af637',t:'MTc2NzcyNjc0My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b9d987a2046f62c',t:'MTc2NzcyNzQ2Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
