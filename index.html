@@ -3,9 +3,7 @@
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cadastro de Alunos</title>
-  <script src="/_sdk/data_sdk.js"></script>
-  <script src="/_sdk/element_sdk.js"></script>
+  <title>Sistema de Cadastro de Alunos - Rede Municipal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -73,6 +71,8 @@
     }
   </style>
   <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="/_sdk/element_sdk.js" type="text/javascript"></script>
  </head>
  <body class="h-full"><!-- Login Screen -->
   <div id="login-screen" class="w-full h-full flex items-center justify-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
@@ -86,7 +86,7 @@
      <p class="text-gray-600">Sistema de Cadastro de Alunos</p>
     </div>
     <form id="login-form" class="space-y-6">
-     <div><label for="login-user" class="block text-sm font-medium text-gray-700 mb-2">👤 Selecione o Usuário</label> <select id="login-user" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-lg"> <option value="">Escolha seu usuário</option> <option value="0">👨‍💼 Francisco Silva (Administrador)</option> <option value="1">👩‍💼 Gill��ne (Secretária de Educação)</option> <option value="2">👩‍🏫 Coordenadoras (Acesso Geral)</option> </select>
+     <div><label for="login-user" class="block text-sm font-medium text-gray-700 mb-2">👤 Selecione o Usuário</label> <select id="login-user" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-lg"> <option value="">Escolha seu usuário</option> <option value="0">👨‍💼 Francisco Silva (Administrador)</option> <option value="1">👩‍💼 Gillâne (Secretária de Educação)</option> <option value="2">👩‍🏫 Coordenadoras (Acesso Geral)</option> </select>
      </div>
      <div><label for="login-password" class="block text-sm font-medium text-gray-700 mb-2">🔒 Digite sua senha</label> <input type="password" id="login-password" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-center text-lg" placeholder="••••••••">
      </div>
@@ -285,7 +285,7 @@
     // Authentication
     const USERS = [
       { name: 'Francisco Silva', password: 'das496431', role: 'Administrador' },
-      { name: 'Gill��ne', password: 'semed123', role: 'Secretária de Educação' },
+      { name: 'Gillâne', password: 'semed123', role: 'Secretária de Educação' },
       { name: 'Coordenadoras', password: 'semed123', role: 'Coordenadora' }
     ];
     let isAuthenticated = false;
@@ -350,6 +350,7 @@
       document.getElementById('login-screen').classList.add('hidden');
       document.getElementById('app').classList.remove('hidden');
       document.getElementById('logged-user').textContent = `👤 ${currentUser} (${currentUserRole})`;
+      loadStudents();
     }
 
     function showLogin() {
@@ -362,67 +363,20 @@
     let allStudents = [];
     let filteredStudents = [];
     let editingStudent = null;
-    let isLoading = false;
 
-    const defaultConfig = {
-      titulo_sistema: "Cadastro de Alunos",
-      subtitulo: "Rede Municipal de Ensino",
-      background_color: "#667eea",
-      card_color: "#ffffff",
-      text_color: "#1f2937",
-      primary_button_color: "#7c3aed",
-      secondary_button_color: "#ffffff"
-    };
-
-    // Data SDK Handler
-    const dataHandler = {
-      onDataChanged(data) {
-        allStudents = data;
-        filteredStudents = data;
+    // LocalStorage Data Management
+    function loadStudents() {
+      const stored = localStorage.getItem('students_data');
+      if (stored) {
+        allStudents = JSON.parse(stored);
+        filteredStudents = allStudents;
         updateStats();
         renderStudentsList();
-        
-        // Re-apply filters if any are active
-        const selectedSchool = document.getElementById('filter-escola').value;
-        const selectedSerie = document.getElementById('filter-serie').value;
-        if (selectedSchool || selectedSerie) {
-          applyFilters();
-        }
       }
-    };
-
-    // Initialize Data SDK
-    (async () => {
-      const initResult = await window.dataSdk.init(dataHandler);
-      if (!initResult.isOk) {
-        showToast('Erro ao inicializar o sistema', 'error');
-      }
-    })();
-
-    // Element SDK
-    async function onConfigChange(config) {
-      const mainTitle = document.getElementById('main-title');
-      const subtitle = document.getElementById('subtitle');
-      
-      if (mainTitle) mainTitle.textContent = config.titulo_sistema || defaultConfig.titulo_sistema;
-      if (subtitle) subtitle.textContent = config.subtitulo || defaultConfig.subtitulo;
     }
 
-    if (window.elementSdk) {
-      window.elementSdk.init({
-        defaultConfig,
-        onConfigChange,
-        mapToCapabilities: (config) => ({
-          recolorables: [],
-          borderables: [],
-          fontEditable: undefined,
-          fontSizeable: undefined
-        }),
-        mapToEditPanelValues: (config) => new Map([
-          ["titulo_sistema", config.titulo_sistema || defaultConfig.titulo_sistema],
-          ["subtitulo", config.subtitulo || defaultConfig.subtitulo]
-        ])
-      });
+    function saveStudents() {
+      localStorage.setItem('students_data', JSON.stringify(allStudents));
     }
 
     // Toast Notification
@@ -476,10 +430,8 @@
     // Download PDF from Table
     document.getElementById('btn-download-pdf').addEventListener('click', async () => {
       try {
-        // Wait a moment to ensure libraries are loaded
         await new Promise(resolve => setTimeout(resolve, 100));
         
-        // Check if jsPDF is loaded
         if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
           showToast('⚠️ Aguarde o carregamento das bibliotecas PDF...', 'error');
           console.error('jsPDF não está carregado');
@@ -488,7 +440,6 @@
         
         const { jsPDF } = window.jspdf;
         
-        // Check if autoTable is available
         if (typeof jsPDF.prototype.autoTable === 'undefined') {
           showToast('⚠️ Extensão de tabela PDF não carregada. Recarregue a página.', 'error');
           console.error('autoTable não está disponível');
@@ -500,7 +451,6 @@
         const schoolName = document.getElementById('table-info').textContent;
         const currentDate = new Date().toLocaleDateString('pt-BR');
         
-        // Add title
         doc.setFontSize(16);
         doc.text('Lista de Alunos', 148, 15, { align: 'center' });
         
@@ -510,7 +460,6 @@
         doc.setFontSize(10);
         doc.text(`Data: ${currentDate}`, 148, 28, { align: 'center' });
         
-        // Get table data
         const tableBody = document.getElementById('students-table-body');
         const rows = Array.from(tableBody.querySelectorAll('tr'));
         
@@ -519,7 +468,6 @@
           return cells.map(cell => cell.textContent.trim());
         });
         
-        // Create PDF table using autoTable
         doc.autoTable({
           head: [['Nome', 'CPF', 'Data Nasc.', 'Idade', 'Sexo', 'Cor/Raça', 'Localidade', 'Transp.', 'PCD', 'Situação']],
           body: tableData,
@@ -537,21 +485,20 @@
             fillColor: [245, 245, 245]
           },
           columnStyles: {
-            0: { cellWidth: 40 }, // Nome
-            1: { cellWidth: 25 }, // CPF
-            2: { cellWidth: 22 }, // Data Nasc
-            3: { cellWidth: 12 }, // Idade
-            4: { cellWidth: 15 }, // Sexo
-            5: { cellWidth: 18 }, // Cor/Raça
-            6: { cellWidth: 30 }, // Localidade
-            7: { cellWidth: 15 }, // Transporte
-            8: { cellWidth: 12 }, // PCD
-            9: { cellWidth: 20 }  // Situação
+            0: { cellWidth: 40 },
+            1: { cellWidth: 25 },
+            2: { cellWidth: 22 },
+            3: { cellWidth: 12 },
+            4: { cellWidth: 15 },
+            5: { cellWidth: 18 },
+            6: { cellWidth: 30 },
+            7: { cellWidth: 15 },
+            8: { cellWidth: 12 },
+            9: { cellWidth: 20 }
           },
           margin: { top: 35, left: 10, right: 10 }
         });
         
-        // Add footer
         const pageCount = doc.internal.getNumberOfPages();
         for (let i = 1; i <= pageCount; i++) {
           doc.setPage(i);
@@ -564,12 +511,10 @@
           );
         }
         
-        // Generate filename - clean it up for better compatibility
         const cleanSchoolName = schoolName.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
         const cleanDate = currentDate.replace(/\//g, '-');
         const filename = `Lista_Alunos_${cleanSchoolName}_${cleanDate}.pdf`;
         
-        // Save PDF to local machine
         doc.save(filename);
         
         showToast('✅ PDF baixado com sucesso!', 'success');
@@ -591,8 +536,8 @@
       }
       
       emptyState.classList.add('hidden');
-      container.innerHTML = filteredStudents.map(student => `
-        <div class="card border border-gray-200 rounded-lg p-5 hover:border-purple-300" data-id="${student.__backendId}">
+      container.innerHTML = filteredStudents.map((student, index) => `
+        <div class="card border border-gray-200 rounded-lg p-5 hover:border-purple-300" data-id="${index}">
           <div class="flex justify-between items-start">
             <div class="flex-1">
               <div class="flex items-center gap-3 mb-3">
@@ -638,18 +583,18 @@
             </div>
             
             <div class="flex gap-2 ml-4">
-              <button onclick="viewStudent('${student.__backendId}')" class="text-blue-600 hover:text-blue-800 p-2" title="Ver detalhes">
+              <button onclick="viewStudent(${index})" class="text-blue-600 hover:text-blue-800 p-2" title="Ver detalhes">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                 </svg>
               </button>
-              <button onclick="editStudent('${student.__backendId}')" class="text-green-600 hover:text-green-800 p-2" title="Editar">
+              <button onclick="editStudent(${index})" class="text-green-600 hover:text-green-800 p-2" title="Editar">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                 </svg>
               </button>
-              <button onclick="confirmDelete('${student.__backendId}')" class="text-red-600 hover:text-red-800 p-2" title="Excluir">
+              <button onclick="confirmDelete(${index})" class="text-red-600 hover:text-red-800 p-2" title="Excluir">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                 </svg>
@@ -676,10 +621,6 @@
 
     // New Student
     document.getElementById('btn-novo').addEventListener('click', () => {
-      if (allStudents.length >= 999) {
-        showToast('Limite máximo de 999 alunos atingido', 'error');
-        return;
-      }
       openModal('Novo Cadastro');
     });
 
@@ -688,8 +629,8 @@
     document.getElementById('btn-cancel').addEventListener('click', closeModal);
 
     // View Student Details
-    window.viewStudent = (id) => {
-      const student = allStudents.find(s => s.__backendId === id);
+    window.viewStudent = (index) => {
+      const student = allStudents[index];
       if (!student) return;
 
       const detailsHtml = `
@@ -738,11 +679,11 @@
     };
 
     // Edit Student
-    window.editStudent = (id) => {
-      const student = allStudents.find(s => s.__backendId === id);
+    window.editStudent = (index) => {
+      const student = allStudents[index];
       if (!student) return;
 
-      editingStudent = student;
+      editingStudent = index;
       openModal('Editar Aluno');
 
       document.getElementById('nome_completo').value = student.nome_completo;
@@ -763,21 +704,21 @@
     };
 
     // Confirm Delete
-    window.confirmDelete = (id) => {
-      const student = allStudents.find(s => s.__backendId === id);
+    window.confirmDelete = (index) => {
+      const student = allStudents[index];
       if (!student) return;
 
-      const card = document.querySelector(`[data-id="${id}"]`);
+      const card = document.querySelector(`[data-id="${index}"]`);
       const originalContent = card.innerHTML;
       
       card.innerHTML = `
         <div class="flex items-center justify-between">
           <p class="text-lg font-semibold text-red-600">Confirmar exclusão de ${student.nome_completo}?</p>
           <div class="flex gap-2">
-            <button onclick="deleteStudent('${id}')" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+            <button onclick="deleteStudent(${index})" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
               Confirmar
             </button>
-            <button onclick="cancelDelete('${id}', \`${originalContent.replace(/`/g, '\\`')}\`)" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
+            <button onclick="cancelDelete(${index}, \`${originalContent.replace(/`/g, '\\`')}\`)" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
               Cancelar
             </button>
           </div>
@@ -785,37 +726,24 @@
       `;
     };
 
-    window.cancelDelete = (id, originalContent) => {
-      const card = document.querySelector(`[data-id="${id}"]`);
+    window.cancelDelete = (index, originalContent) => {
+      const card = document.querySelector(`[data-id="${index}"]`);
       card.innerHTML = originalContent;
     };
 
     // Delete Student
-    window.deleteStudent = async (id) => {
-      const student = allStudents.find(s => s.__backendId === id);
-      if (!student || isLoading) return;
-
-      isLoading = true;
-      const card = document.querySelector(`[data-id="${id}"]`);
-      card.style.opacity = '0.5';
-
-      const result = await window.dataSdk.delete(student);
-      
-      isLoading = false;
-
-      if (result.isOk) {
-        showToast('Aluno excluído com sucesso', 'success');
-      } else {
-        card.style.opacity = '1';
-        showToast('Erro ao excluir aluno', 'error');
-      }
+    window.deleteStudent = (index) => {
+      allStudents.splice(index, 1);
+      saveStudents();
+      filteredStudents = allStudents;
+      updateStats();
+      renderStudentsList();
+      showToast('Aluno excluído com sucesso', 'success');
     };
 
     // Form Submit
-    document.getElementById('student-form').addEventListener('submit', async (e) => {
+    document.getElementById('student-form').addEventListener('submit', (e) => {
       e.preventDefault();
-      
-      if (isLoading) return;
 
       const formData = {
         nome_completo: document.getElementById('nome_completo').value,
@@ -836,35 +764,19 @@
         data_cadastro: new Date().toISOString()
       };
 
-      isLoading = true;
-      const btnSave = document.getElementById('btn-save');
-      btnSave.disabled = true;
-      btnSave.textContent = 'Salvando...';
-
-      let result;
-      if (editingStudent) {
-        result = await window.dataSdk.update({ ...formData, __backendId: editingStudent.__backendId });
+      if (editingStudent !== null) {
+        allStudents[editingStudent] = formData;
+        showToast('Aluno atualizado com sucesso', 'success');
       } else {
-        if (allStudents.length >= 999) {
-          showToast('Limite máximo de 999 alunos atingido', 'error');
-          isLoading = false;
-          btnSave.disabled = false;
-          btnSave.textContent = 'Salvar Aluno';
-          return;
-        }
-        result = await window.dataSdk.create(formData);
+        allStudents.push(formData);
+        showToast('Aluno cadastrado com sucesso', 'success');
       }
 
-      isLoading = false;
-      btnSave.disabled = false;
-      btnSave.textContent = 'Salvar Aluno';
-
-      if (result.isOk) {
-        showToast(editingStudent ? 'Aluno atualizado com sucesso' : 'Aluno cadastrado com sucesso', 'success');
-        closeModal();
-      } else {
-        showToast('Erro ao salvar aluno', 'error');
-      }
+      saveStudents();
+      filteredStudents = allStudents;
+      updateStats();
+      renderStudentsList();
+      closeModal();
     });
 
     // CPF Formatting
@@ -919,7 +831,6 @@
         return matchSchool && matchSerie && matchNome;
       });
       
-      // Show table if both school and series are selected
       const tableContainer = document.getElementById('students-table-container');
       const listContainer = document.getElementById('students-list-container');
       
@@ -962,7 +873,6 @@
         document.getElementById('filter-nome').value = '';
         filteredStudents = allStudents;
         
-        // Hide table, show list
         document.getElementById('students-table-container').classList.add('hidden');
         document.getElementById('students-list-container').classList.remove('hidden');
         renderStudentsList();
@@ -986,7 +896,6 @@
       document.getElementById('filter-nome').value = '';
       document.getElementById('escola-selected-filter').classList.add('hidden');
       
-      // Hide table, show list
       document.getElementById('students-table-container').classList.add('hidden');
       document.getElementById('students-list-container').classList.remove('hidden');
       
@@ -1001,7 +910,6 @@
       exportModal.classList.remove('hidden');
       exportModal.classList.add('flex');
       
-      // Populate schools
       const exportSchoolSelect = document.getElementById('export-escola');
       const schools = [...new Set(allStudents.map(s => s.escola))].sort();
       exportSchoolSelect.innerHTML = '<option value="">Escolha uma escola</option>' + 
@@ -1029,7 +937,6 @@
       if (selectedSchool) {
         serieSection.classList.remove('hidden');
         
-        // Populate series for selected school
         const exportSerieSelect = document.getElementById('export-serie');
         const series = [...new Set(
           allStudents
@@ -1080,7 +987,6 @@
       
       if (!selectedSchool || !selectedSerie) return;
       
-      // Filter students
       const studentsToExport = allStudents.filter(s => 
         s.escola === selectedSchool && s.serie_ano === selectedSerie
       );
@@ -1090,7 +996,6 @@
         return;
       }
       
-      // Prepare data for Excel
       const excelData = studentsToExport.map(student => ({
         'Nome Completo': student.nome_completo,
         'CPF': student.cpf,
@@ -1109,40 +1014,24 @@
         'Endereço': student.endereco || ''
       }));
       
-      // Create workbook
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(excelData);
       
-      // Set column widths
       ws['!cols'] = [
-        { wch: 30 }, // Nome Completo
-        { wch: 15 }, // CPF
-        { wch: 18 }, // Data de Nascimento
-        { wch: 8 },  // Idade
-        { wch: 12 }, // Sexo
-        { wch: 12 }, // Cor/Raça
-        { wch: 20 }, // Localidade
-        { wch: 25 }, // Escola
-        { wch: 15 }, // Série/Ano
-        { wch: 12 }, // Situação
-        { wch: 15 }, // Usa Transporte
-        { wch: 8 },  // PCD
-        { wch: 30 }, // Nome do Pai
-        { wch: 30 }, // Nome da Mãe
-        { wch: 40 }  // Endere����o
+        { wch: 30 }, { wch: 15 }, { wch: 18 }, { wch: 8 }, { wch: 12 },
+        { wch: 12 }, { wch: 20 }, { wch: 25 }, { wch: 15 }, { wch: 12 },
+        { wch: 15 }, { wch: 8 }, { wch: 30 }, { wch: 30 }, { wch: 40 }
       ];
       
       XLSX.utils.book_append_sheet(wb, ws, 'Alunos');
       
-      // Generate filename
       const filename = `Alunos_${selectedSchool.replace(/\s+/g, '_')}_${selectedSerie.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
       
-      // Download file
       XLSX.writeFile(wb, filename);
       
       showToast(`Planilha exportada com sucesso! ${studentsToExport.length} aluno(s)`, 'success');
       closeExportModal();
     });
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b9d404ab345f638',t:'MTc2NzcyMzg1NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b9d6489637f4f7e',t:'MTc2NzcyNTMzOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
