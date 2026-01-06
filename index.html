@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Sistema de Cadastro de Alunos - Secretaria Municipal de Cocal dos Alves">
   <meta name="author" content="Francisco Silva">
-  <title>Sistema de Cadastro de Alunos - Rede Municipal</title><!-- Tailwind CSS -->
+  <title>Sistema de Cadastro de Alunos - Rede Municipal</title><!-- Data SDK -->
+  <script src="/_sdk/data_sdk.js"></script><!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script><!-- SheetJS para exportação Excel -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script><!-- jsPDF para geração de PDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><!-- jsPDF AutoTable para tabelas em PDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js" integrity="sha512-oKMuiUY6FHJrOdsD/1TObFLNLaaD/x+7F0TM8VVH8V6TIqpQJkLMJn7fJrpf5rQJ3j6qXJA8E4syEJsN8CtUXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><!-- Favicon -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><!-- jsPDF AutoTable para tabelas em PDF -->
+  <script src="https://unpkg.com/jspdf-autotable@3.5.31/dist/jspdf.plugin.autotable.js"></script><!-- Favicon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
   <style>
     body {
@@ -82,7 +83,6 @@
     }
   </style>
   <style>@view-transition { navigation: auto; }</style>
-  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
   <script src="/_sdk/element_sdk.js" type="text/javascript"></script>
  </head>
  <body class="h-full"><!-- Login Screen -->
@@ -195,7 +195,7 @@
          <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold">Localidade</th>
          <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold">Transporte</th>
          <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold">PCD</th>
-         <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold">Situa��ão</th>
+         <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold">Situação</th>
         </tr>
        </thead>
        <tbody id="students-table-body"><!-- Table rows will be rendered here -->
@@ -286,7 +286,7 @@
        <div class="md:col-span-2"><label for="endereco" class="block text-sm font-medium text-gray-700 mb-2">Endereço Completo</label> <textarea id="endereco" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"></textarea>
        </div>
       </div>
-      <div class="mt-6 flex gap-3 justify-end"><button type="button" id="btn-cancel" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50"> Cancelar </button> <button type="submit" id="btn-save" class="px-6 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700"> Salvar Aluno </button>
+      <div class="mt-6 flex gap-3 justify-end"><button type="button" id="btn-cancel" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50"> Cancelar </button> <button type="submit" id="btn-save" class="px-6 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700"> <span id="save-text">Salvar Aluno</span> </button>
       </div>
      </form>
     </div>
@@ -303,6 +303,52 @@
     let currentUser = '';
     let currentUserRole = '';
 
+    // Data SDK Variables
+    let allStudents = [];
+    let filteredStudents = [];
+    let editingStudent = null;
+    let isDataSdkReady = false;
+
+    // Data SDK Handler
+    const dataHandler = {
+      onDataChanged(data) {
+        allStudents = data;
+        
+        // Maintain current filters if active
+        const selectedSchool = document.getElementById('filter-escola').value;
+        const selectedSerie = document.getElementById('filter-serie').value;
+        const nome = document.getElementById('filter-nome').value;
+        
+        if (selectedSchool || selectedSerie || nome) {
+          applyFilters();
+        } else {
+          filteredStudents = allStudents;
+          renderStudentsList();
+        }
+        
+        updateStats();
+      }
+    };
+
+    // Initialize Data SDK
+    async function initializeDataSdk() {
+      if (!window.dataSdk) {
+        showToast('❌ Sistema de dados não disponível', 'error');
+        return false;
+      }
+
+      const initResult = await window.dataSdk.init(dataHandler);
+      
+      if (initResult.isOk) {
+        isDataSdkReady = true;
+        return true;
+      } else {
+        showToast('❌ Erro ao inicializar sistema de dados', 'error');
+        console.error('Data SDK init error:', initResult.error);
+        return false;
+      }
+    }
+
     // Check if user is already logged in
     const savedUser = localStorage.getItem('logged_user');
     const savedRole = localStorage.getItem('logged_role');
@@ -316,12 +362,12 @@
       document.getElementById('app').classList.remove('hidden');
       document.getElementById('logged-user').textContent = `👤 ${currentUser} (${currentUserRole})`;
       
-      // Load students data
-      loadStudents();
+      // Initialize Data SDK
+      initializeDataSdk();
     }
 
     // Login Form Handler
-    document.getElementById('login-form').addEventListener('submit', (e) => {
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       
       const userIndex = document.getElementById('login-user').value;
@@ -343,6 +389,10 @@
         localStorage.setItem('logged_user', selectedUser.name);
         localStorage.setItem('logged_role', selectedUser.role);
         errorDiv.classList.add('hidden');
+        
+        // Initialize Data SDK before showing app
+        const sdkReady = await initializeDataSdk();
+        
         showApp();
         showToast(`Bem-vindo(a), ${selectedUser.name}!`, 'success');
       } else {
@@ -368,7 +418,6 @@
       document.getElementById('login-screen').classList.add('hidden');
       document.getElementById('app').classList.remove('hidden');
       document.getElementById('logged-user').textContent = `👤 ${currentUser} (${currentUserRole})`;
-      loadStudents();
     }
 
     function showLogin() {
@@ -377,52 +426,6 @@
       document.getElementById('login-form').reset();
       document.getElementById('login-error').classList.add('hidden');
     }
-
-    let allStudents = [];
-    let filteredStudents = [];
-    let editingStudent = null;
-
-    // LocalStorage Data Management with Auto-Sync
-    function loadStudents() {
-      const stored = localStorage.getItem('students_data');
-      if (stored) {
-        allStudents = JSON.parse(stored);
-        filteredStudents = allStudents;
-        updateStats();
-        renderStudentsList();
-      }
-    }
-
-    function saveStudents() {
-      localStorage.setItem('students_data', JSON.stringify(allStudents));
-      // Trigger storage event for other tabs/windows
-      localStorage.setItem('students_sync_timestamp', Date.now().toString());
-    }
-
-    // Listen for changes from other tabs/windows
-    window.addEventListener('storage', (e) => {
-      if (e.key === 'students_sync_timestamp' || e.key === 'students_data') {
-        const stored = localStorage.getItem('students_data');
-        if (stored) {
-          allStudents = JSON.parse(stored);
-          
-          // Maintain current filters if active
-          const selectedSchool = document.getElementById('filter-escola').value;
-          const selectedSerie = document.getElementById('filter-serie').value;
-          const nome = document.getElementById('filter-nome').value;
-          
-          if (selectedSchool || selectedSerie || nome) {
-            applyFilters();
-          } else {
-            filteredStudents = allStudents;
-            renderStudentsList();
-          }
-          
-          updateStats();
-          showToast('✨ Dados atualizados de outro dispositivo!', 'success');
-        }
-      }
-    });
 
     // Toast Notification
     function showToast(message, type = 'success') {
@@ -472,54 +475,63 @@
       `).join('');
     }
 
-    // Download PDF from Table
+    // Download PDF from Table (PDF/UA Compatible)
     document.getElementById('btn-download-pdf').addEventListener('click', async () => {
       const downloadBtn = document.getElementById('btn-download-pdf');
       const originalBtnHTML = downloadBtn.innerHTML;
       
       try {
-        // Mostra estado de carregamento
         downloadBtn.disabled = true;
         downloadBtn.innerHTML = `
           <svg class="animate-spin h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          Gerando PDF...
+          Gerando PDF/UA...
         `;
         
-        // Verifica se jsPDF está disponível
-        if (typeof window.jspdf === 'undefined') {
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        if (typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF) {
           throw new Error('Biblioteca jsPDF não carregada');
         }
         
         const { jsPDF } = window.jspdf;
         
-        // Verifica se autoTable está disponível
-        if (!jsPDF.API || typeof jsPDF.API.autoTable !== 'function') {
-          throw new Error('Extensão autoTable não disponível');
-        }
+        // Create PDF with PDF/UA (Universal Accessibility) compliance
+        const doc = new jsPDF({
+          orientation: 'landscape',
+          unit: 'mm',
+          format: 'a4',
+          putOnlyUsedFonts: true,
+          compress: true
+        });
         
-        const doc = new jsPDF('landscape', 'mm', 'a4');
+        // Set PDF/UA metadata for accessibility
+        doc.setProperties({
+          title: 'Lista de Alunos - Secretaria Municipal de Cocal dos Alves',
+          subject: 'Relatório de Alunos Matriculados',
+          author: 'Secretaria Municipal de Educação - Cocal dos Alves',
+          keywords: 'alunos, educação, matrícula, lista',
+          creator: 'Sistema de Cadastro de Alunos',
+          language: 'pt-BR'
+        });
         
         const schoolName = document.getElementById('table-info').textContent;
         const currentDate = new Date().toLocaleDateString('pt-BR');
         
-        // Título principal
+        // Header with structured content for accessibility
         doc.setFontSize(16);
         doc.setFont('helvetica', 'bold');
         doc.text('Lista de Alunos', 148, 15, { align: 'center' });
         
-        // Subtítulo com escola e série
         doc.setFontSize(12);
         doc.setFont('helvetica', 'normal');
         doc.text(schoolName, 148, 22, { align: 'center' });
         
-        // Data
         doc.setFontSize(10);
-        doc.text(`Data: ${currentDate}`, 148, 28, { align: 'center' });
+        doc.text(`Data de Emissão: ${currentDate}`, 148, 28, { align: 'center' });
         
-        // Captura os dados da tabela
         const tableBody = document.getElementById('students-table-body');
         const rows = Array.from(tableBody.querySelectorAll('tr'));
         
@@ -528,22 +540,29 @@
           return cells.map(cell => cell.textContent.trim());
         });
         
-        // Cria a tabela
+        if (typeof doc.autoTable !== 'function') {
+          throw new Error('Plugin autoTable não carregado');
+        }
+        
+        // Create accessible table with proper structure
         doc.autoTable({
-          head: [['Nome', 'CPF', 'Data Nasc.', 'Idade', 'Sexo', 'Cor/Raça', 'Localidade', 'Transp.', 'PCD', 'Situação']],
+          head: [['Nome Completo', 'CPF', 'Data Nasc.', 'Idade', 'Sexo', 'Cor/Raça', 'Localidade', 'Transp.', 'PCD', 'Situação']],
           body: tableData,
           startY: 35,
           styles: { 
             fontSize: 8,
             cellPadding: 2,
             lineColor: [200, 200, 200],
-            lineWidth: 0.1
+            lineWidth: 0.1,
+            overflow: 'linebreak',
+            cellWidth: 'wrap'
           },
           headStyles: {
             fillColor: [124, 58, 237],
             textColor: 255,
             fontStyle: 'bold',
-            halign: 'center'
+            halign: 'center',
+            valign: 'middle'
           },
           alternateRowStyles: {
             fillColor: [245, 245, 245]
@@ -560,24 +579,35 @@
             8: { cellWidth: 12, halign: 'center' },
             9: { cellWidth: 20, halign: 'center' }
           },
-          margin: { top: 35, left: 10, right: 10 }
+          margin: { top: 35, left: 10, right: 10 },
+          // Accessibility features
+          tableLineColor: [0, 0, 0],
+          tableLineWidth: 0.1
         });
         
-        // Adiciona rodapé em todas as páginas
+        // Add accessible footer to all pages
         const pageCount = doc.internal.getNumberOfPages();
         for (let i = 1; i <= pageCount; i++) {
           doc.setPage(i);
           doc.setFontSize(8);
           doc.setTextColor(100);
           doc.text(
-            `Secretaria Municipal de Cocal dos Alves - Página ${i} de ${pageCount}`,
+            `Secretaria Municipal de Educação de Cocal dos Alves - Página ${i} de ${pageCount}`,
             148,
             205,
             { align: 'center' }
           );
+          
+          // Add document info footer
+          doc.setFontSize(7);
+          doc.text(
+            `Documento gerado em ${new Date().toLocaleString('pt-BR')} - Acessível (PDF/UA)`,
+            148,
+            208,
+            { align: 'center' }
+          );
         }
         
-        // Gera o nome do arquivo limpo
         const cleanSchoolName = schoolName
           .normalize('NFD')
           .replace(/[\u0300-\u036f]/g, '')
@@ -586,18 +616,16 @@
           .substring(0, 50);
         
         const timestamp = new Date().toISOString().slice(0, 10);
-        const filename = `Lista_Alunos_${cleanSchoolName}_${timestamp}.pdf`;
+        const filename = `Lista_Alunos_${cleanSchoolName}_${timestamp}_PDFUA.pdf`;
         
-        // Salva o PDF
         doc.save(filename);
         
-        showToast('✅ PDF baixado com sucesso!', 'success');
+        showToast('📥 PDF/UA acessível salvo na pasta Downloads!', 'success');
         
       } catch (error) {
         console.error('Erro ao gerar PDF:', error);
-        showToast(`❌ Erro ao gerar PDF: ${error.message}. Recarregue a página e tente novamente.`, 'error');
+        showToast(`❌ Erro ao gerar PDF: ${error.message}`, 'error');
       } finally {
-        // Restaura o botão
         setTimeout(() => {
           downloadBtn.disabled = false;
           downloadBtn.innerHTML = originalBtnHTML;
@@ -617,8 +645,8 @@
       }
       
       emptyState.classList.add('hidden');
-      container.innerHTML = filteredStudents.map((student, index) => `
-        <div class="card border border-gray-200 rounded-lg p-5 hover:border-purple-300" data-id="${index}">
+      container.innerHTML = filteredStudents.map((student) => `
+        <div class="card border border-gray-200 rounded-lg p-5 hover:border-purple-300" data-backend-id="${student.__backendId}">
           <div class="flex justify-between items-start">
             <div class="flex-1">
               <div class="flex items-center gap-3 mb-3">
@@ -664,18 +692,18 @@
             </div>
             
             <div class="flex gap-2 ml-4">
-              <button onclick="viewStudent(${index})" class="text-blue-600 hover:text-blue-800 p-2" title="Ver detalhes">
+              <button onclick="viewStudent('${student.__backendId}')" class="text-blue-600 hover:text-blue-800 p-2" title="Ver detalhes">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                 </svg>
               </button>
-              <button onclick="editStudent(${index})" class="text-green-600 hover:text-green-800 p-2" title="Editar">
+              <button onclick="editStudent('${student.__backendId}')" class="text-green-600 hover:text-green-800 p-2" title="Editar">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                 </svg>
               </button>
-              <button onclick="confirmDelete(${index})" class="text-red-600 hover:text-red-800 p-2" title="Excluir">
+              <button onclick="confirmDelete('${student.__backendId}')" class="text-red-600 hover:text-red-800 p-2" title="Excluir">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                 </svg>
@@ -702,6 +730,10 @@
 
     // New Student
     document.getElementById('btn-novo').addEventListener('click', () => {
+      if (allStudents.length >= 999) {
+        showToast('❌ Limite máximo de 999 alunos atingido. Exclua alguns alunos primeiro.', 'error');
+        return;
+      }
       openModal('Novo Cadastro');
     });
 
@@ -710,8 +742,8 @@
     document.getElementById('btn-cancel').addEventListener('click', closeModal);
 
     // View Student Details
-    window.viewStudent = (index) => {
-      const student = allStudents[index];
+    window.viewStudent = (backendId) => {
+      const student = allStudents.find(s => s.__backendId === backendId);
       if (!student) return;
 
       const detailsHtml = `
@@ -760,11 +792,12 @@
     };
 
     // Edit Student
-    window.editStudent = (index) => {
-      const student = allStudents[index];
+    window.editStudent = (backendId) => {
+      const student = allStudents.find(s => s.__backendId === backendId);
       if (!student) return;
 
-      editingStudent = index;
+      editingStudent = student;
+      
       openModal('Editar Aluno');
 
       document.getElementById('nome_completo').value = student.nome_completo;
@@ -785,21 +818,21 @@
     };
 
     // Confirm Delete
-    window.confirmDelete = (index) => {
-      const student = allStudents[index];
+    window.confirmDelete = (backendId) => {
+      const student = allStudents.find(s => s.__backendId === backendId);
       if (!student) return;
 
-      const card = document.querySelector(`[data-id="${index}"]`);
+      const card = document.querySelector(`[data-backend-id="${backendId}"]`);
       const originalContent = card.innerHTML;
       
       card.innerHTML = `
         <div class="flex items-center justify-between">
           <p class="text-lg font-semibold text-red-600">Confirmar exclusão de ${student.nome_completo}?</p>
           <div class="flex gap-2">
-            <button onclick="deleteStudent(${index})" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+            <button onclick="deleteStudent('${backendId}')" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
               Confirmar
             </button>
-            <button onclick="cancelDelete(${index}, \`${originalContent.replace(/`/g, '\\`')}\`)" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
+            <button onclick="cancelDelete('${backendId}', \`${originalContent.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
               Cancelar
             </button>
           </div>
@@ -807,28 +840,69 @@
       `;
     };
 
-    window.cancelDelete = (index, originalContent) => {
-      const card = document.querySelector(`[data-id="${index}"]`);
+    window.cancelDelete = (backendId, originalContent) => {
+      const card = document.querySelector(`[data-backend-id="${backendId}"]`);
       card.innerHTML = originalContent;
     };
 
     // Delete Student
-    window.deleteStudent = (index) => {
-      allStudents.splice(index, 1);
-      saveStudents();
-      filteredStudents = allStudents;
-      updateStats();
-      renderStudentsList();
-      showToast('Aluno excluído com sucesso', 'success');
+    window.deleteStudent = async (backendId) => {
+      const student = allStudents.find(s => s.__backendId === backendId);
+      if (!student) return;
+
+      const card = document.querySelector(`[data-backend-id="${backendId}"]`);
+      card.innerHTML = `
+        <div class="flex items-center justify-center py-4">
+          <svg class="animate-spin h-8 w-8 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span class="ml-3 text-gray-600">Excluindo...</span>
+        </div>
+      `;
+
+      const result = await window.dataSdk.delete(student);
+      
+      if (result.isOk) {
+        showToast('✅ Aluno excluído com sucesso', 'success');
+      } else {
+        showToast(`❌ Erro ao excluir: ${result.error.message}`, 'error');
+        renderStudentsList();
+      }
     };
 
     // Form Submit
-    document.getElementById('student-form').addEventListener('submit', (e) => {
+    document.getElementById('student-form').addEventListener('submit', async (e) => {
       e.preventDefault();
+
+      if (!isDataSdkReady) {
+        showToast('❌ Sistema de dados não está pronto. Tente novamente.', 'error');
+        return;
+      }
+
+      const cpfInput = document.getElementById('cpf').value;
+      
+      // Check if CPF already exists (except when editing)
+      const cpfExists = allStudents.some((student) => 
+        student.cpf === cpfInput && (!editingStudent || student.__backendId !== editingStudent.__backendId)
+      );
+      
+      if (cpfExists) {
+        showToast('❌ Já existe um aluno cadastrado com este CPF!', 'error');
+        document.getElementById('cpf').focus();
+        return;
+      }
+
+      const saveBtn = document.getElementById('btn-save');
+      const saveText = document.getElementById('save-text');
+      const originalText = saveText.textContent;
+      
+      saveBtn.disabled = true;
+      saveText.textContent = editingStudent ? 'Atualizando...' : 'Salvando...';
 
       const formData = {
         nome_completo: document.getElementById('nome_completo').value,
-        cpf: document.getElementById('cpf').value,
+        cpf: cpfInput,
         data_nascimento: document.getElementById('data_nascimento').value,
         idade: parseInt(document.getElementById('idade').value),
         sexo: document.getElementById('sexo').value,
@@ -842,32 +916,43 @@
         nome_pai: document.getElementById('nome_pai').value,
         nome_mae: document.getElementById('nome_mae').value,
         endereco: document.getElementById('endereco').value,
-        data_cadastro: editingStudent !== null ? allStudents[editingStudent].data_cadastro : new Date().toISOString()
+        data_cadastro: new Date().toISOString()
       };
 
+      let result;
+      
       if (editingStudent !== null) {
-        allStudents[editingStudent] = formData;
-        showToast('✅ Aluno atualizado com sucesso!', 'success');
+        // Update existing student
+        const updatedStudent = { ...editingStudent, ...formData };
+        result = await window.dataSdk.update(updatedStudent);
+        
+        if (result.isOk) {
+          showToast('✅ Aluno atualizado com sucesso!', 'success');
+          closeModal();
+        } else {
+          showToast(`❌ Erro ao atualizar: ${result.error.message}`, 'error');
+        }
       } else {
-        allStudents.push(formData);
-        showToast('✅ Aluno cadastrado com sucesso!', 'success');
+        // Create new student
+        if (allStudents.length >= 999) {
+          showToast('❌ Limite máximo de 999 alunos atingido!', 'error');
+          saveBtn.disabled = false;
+          saveText.textContent = originalText;
+          return;
+        }
+        
+        result = await window.dataSdk.create(formData);
+        
+        if (result.isOk) {
+          showToast('✅ Aluno cadastrado com sucesso!', 'success');
+          closeModal();
+        } else {
+          showToast(`❌ Erro ao cadastrar: ${result.error.message}`, 'error');
+        }
       }
 
-      saveStudents();
-      
-      // Reaplica filtros se estiverem ativos
-      const selectedSchool = document.getElementById('filter-escola').value;
-      const selectedSerie = document.getElementById('filter-serie').value;
-      
-      if (selectedSchool || selectedSerie) {
-        applyFilters();
-      } else {
-        filteredStudents = allStudents;
-        renderStudentsList();
-      }
-      
-      updateStats();
-      closeModal();
+      saveBtn.disabled = false;
+      saveText.textContent = originalText;
     });
 
     // CPF Formatting
@@ -975,10 +1060,7 @@
     });
 
     document.getElementById('filter-nome').addEventListener('input', () => {
-      const selectedSchool = document.getElementById('filter-escola').value;
-      if (selectedSchool) {
-        applyFilters();
-      }
+      applyFilters();
     });
 
     document.getElementById('btn-limpar-filtro').addEventListener('click', () => {
@@ -1124,5 +1206,5 @@
       closeExportModal();
     });
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b9d9fc37759f614',t:'MTc2NzcyNzc2NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b9dc641a433f637',t:'MTc2NzcyOTM0MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
