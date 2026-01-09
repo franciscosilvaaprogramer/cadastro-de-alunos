@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Sistema de Cadastro de Alunos - Secretaria Municipal de Cocal dos Alves">
   <meta name="author" content="Francisco Silva">
-  <title>Sistema de Cadastro de Alunos - Rede Municipal</title><!-- Data SDK -->
-  <script src="/_sdk/data_sdk.js"></script><!-- Tailwind CSS -->
+  <title>Sistema de Cadastro de Alunos - Rede Municipal</title><!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script><!-- SheetJS para exportação Excel -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script><!-- Favicon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
@@ -90,6 +89,7 @@
     }
   </style>
   <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
   <script src="/_sdk/element_sdk.js" type="text/javascript"></script>
  </head>
  <body class="h-full"><!-- Login Screen -->
@@ -166,7 +166,7 @@
       </div>
      </div>
     </div><!-- Action Buttons -->
-    <div class="mb-6 flex gap-4"><button id="btn-novo" class="btn-primary bg-white text-purple-700 px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-gray-50"> Novo Cadastro </button> <button id="btn-filtrar" class="bg-purple-800 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-purple-900"> Filtrar </button> <button id="btn-exportar" class="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-green-700 flex items-center gap-2">
+    <div class="mb-6 flex gap-4 flex-wrap"><button id="btn-novo" class="btn-primary bg-white text-purple-700 px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-gray-50"> Novo Cadastro </button> <button id="btn-filtrar" class="bg-purple-800 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-purple-900"> Filtrar </button> <button id="btn-exportar" class="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-green-700 flex items-center gap-2">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
       </svg> Exportar Excel </button> <button id="btn-pdf" class="bg-red-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-red-700 flex items-center gap-2">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
@@ -227,7 +227,7 @@
     <div class="bg-white rounded-lg shadow-lg p-8 text-center">
      <div class="mb-4">
       <p class="text-xl font-bold text-gray-800 mb-3">Secretaria Municipal de Cocal dos Alves</p>
-      <p class="text-purple-700 font-semibold italic text-lg">Ensinando com amor, transformando com dedicacao</p>
+      <p class="text-purple-700 font-semibold italic text-lg">Ensinando com amor, transformando com dedicação</p>
      </div>
      <div class="pt-4 border-t border-gray-200">
       <p class="text-base text-gray-600">Desenvolvido por <span class="font-bold text-purple-600">@FranciscoSilva</span></p>
@@ -246,7 +246,7 @@
        <div id="export-serie-section" class="hidden"><label for="export-serie" class="block text-sm font-medium text-gray-700 mb-2">Selecione a Série/Ano *</label> <select id="export-serie" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"> <option value="">Escolha uma série/ano</option> </select>
        </div>
        <div id="export-preview" class="hidden bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p class="text-sm text-blue-800"><strong>Sera exportado:</strong><br><span id="export-count">0</span> aluno(s) da <span id="export-school-name"></span> - <span id="export-serie-name"></span></p>
+        <p class="text-sm text-blue-800"><strong>Será exportado:</strong><br><span id="export-count">0</span> aluno(s) da <span id="export-school-name"></span> - <span id="export-serie-name"></span></p>
        </div>
       </div>
       <div class="mt-6 flex gap-3 justify-end"><button type="button" id="btn-cancel-export" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50"> Cancelar </button> <button type="submit" id="btn-confirm-export" class="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 flex items-center gap-2" disabled>
@@ -265,10 +265,10 @@
       <div class="space-y-4">
        <div><label for="pdf-escola" class="block text-sm font-medium text-gray-700 mb-2">Selecione a Escola *</label> <select id="pdf-escola" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"> <option value="">Escolha uma escola</option> </select>
        </div>
-       <div id="pdf-serie-section" class="hidden"><label for="pdf-serie" class="block text-sm font-medium text-gray-700 mb-2">Selecione a Serie/Ano *</label> <select id="pdf-serie" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"> <option value="">Escolha uma serie/ano</option> </select>
+       <div id="pdf-serie-section" class="hidden"><label for="pdf-serie" class="block text-sm font-medium text-gray-700 mb-2">Selecione a Série/Ano *</label> <select id="pdf-serie" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"> <option value="">Escolha uma série/ano</option> </select>
        </div>
        <div id="pdf-preview" class="hidden bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p class="text-sm text-blue-800"><strong>Sera exportado:</strong><br><span id="pdf-count">0</span> aluno(s) da <span id="pdf-school-name"></span> - <span id="pdf-serie-name"></span></p>
+        <p class="text-sm text-blue-800"><strong>Será exportado:</strong><br><span id="pdf-count">0</span> aluno(s) da <span id="pdf-school-name"></span> - <span id="pdf-serie-name"></span></p>
        </div>
       </div>
       <div class="mt-6 flex gap-3 justify-end"><button type="button" id="btn-cancel-pdf" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50"> Cancelar </button> <button type="submit" id="btn-confirm-pdf" class="px-6 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 flex items-center gap-2" disabled>
@@ -297,29 +297,29 @@
        </div><!-- Sexo -->
        <div><label for="sexo" class="block text-sm font-medium text-gray-700 mb-2">Sexo *</label> <select id="sexo" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"> <option value="">Selecione</option> <option value="Masculino">Masculino</option> <option value="Feminino">Feminino</option> </select>
        </div><!-- Cor -->
-       <div><label for="cor" class="block text-sm font-medium text-gray-700 mb-2">Cor/Raca *</label> <select id="cor" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"> <option value="">Selecione</option> <option value="Branca">Branca</option> <option value="Preta">Preta</option> <option value="Parda">Parda</option> <option value="Amarela">Amarela</option> <option value="Indigena">Indigena</option> </select>
+       <div><label for="cor" class="block text-sm font-medium text-gray-700 mb-2">Cor/Raça *</label> <select id="cor" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"> <option value="">Selecione</option> <option value="Branca">Branca</option> <option value="Preta">Preta</option> <option value="Parda">Parda</option> <option value="Amarela">Amarela</option> <option value="Indígena">Indígena</option> </select>
        </div><!-- Localidade -->
        <div><label for="localidade" class="block text-sm font-medium text-gray-700 mb-2">Localidade *</label> <input type="text" id="localidade" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
        </div><!-- Escola -->
        <div><label for="escola" class="block text-sm font-medium text-gray-700 mb-2">Escola *</label> <input type="text" id="escola" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-       </div><!-- Serie/Ano -->
-       <div><label for="serie_ano" class="block text-sm font-medium text-gray-700 mb-2">Serie/Ano *</label> <select id="serie_ano" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"> <option value="">Selecione</option> <optgroup label="Educacao Infantil"> <option value="Creche I">Creche I</option> <option value="Creche II">Creche II</option> <option value="Creche III">Creche III</option> <option value="Pre I">Pre I</option> <option value="Pre II">Pre II</option> </optgroup> <optgroup label="Ensino Fundamental - Anos Iniciais"> <option value="1º Ano">1º Ano</option> <option value="2º Ano">2º Ano</option> <option value="3º Ano">3º Ano</option> <option value="4º Ano">4º Ano</option> <option value="5º Ano">5º Ano</option> </optgroup> <optgroup label="Ensino Fundamental - Anos Finais"> <option value="6º Ano">6º Ano</option> <option value="7º Ano">7º Ano</option> <option value="8º Ano">8º Ano</option> <option value="9º Ano">9º Ano</option> </optgroup> </select>
-       </div><!-- Situacao -->
-       <div><label for="situacao" class="block text-sm font-medium text-gray-700 mb-2">Situacao *</label> <select id="situacao" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"> <option value="">Selecione</option> <option value="Ativo">Ativo</option> <option value="Transferido">Transferido</option> <option value="Evadido">Evadido</option> </select>
+       </div><!-- Série/Ano -->
+       <div><label for="serie_ano" class="block text-sm font-medium text-gray-700 mb-2">Série/Ano *</label> <select id="serie_ano" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"> <option value="">Selecione</option> <optgroup label="Educação Infantil"> <option value="Creche I">Creche I</option> <option value="Creche II">Creche II</option> <option value="Creche III">Creche III</option> <option value="Pré I">Pré I</option> <option value="Pré II">Pré II</option> </optgroup> <optgroup label="Ensino Fundamental - Anos Iniciais"> <option value="1º Ano">1º Ano</option> <option value="2º Ano">2º Ano</option> <option value="3º Ano">3º Ano</option> <option value="4º Ano">4º Ano</option> <option value="5º Ano">5º Ano</option> </optgroup> <optgroup label="Ensino Fundamental - Anos Finais"> <option value="6º Ano">6º Ano</option> <option value="7º Ano">7º Ano</option> <option value="8º Ano">8º Ano</option> <option value="9º Ano">9º Ano</option> </optgroup> </select>
+       </div><!-- Situação -->
+       <div><label for="situacao" class="block text-sm font-medium text-gray-700 mb-2">Situação *</label> <select id="situacao" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"> <option value="">Selecione</option> <option value="Ativo">Ativo</option> <option value="Transferido">Transferido</option> <option value="Evadido">Evadido</option> </select>
        </div><!-- Transport Type -->
-       <div><label for="tipo_transporte" class="block text-sm font-medium text-gray-700 mb-2">Tipo de Transporte</label> <select id="tipo_transporte" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"> <option value="">Nao utiliza transporte</option> <option value="Onibus">Onibus</option> <option value="Microonibus">Microonibus</option> <option value="Van">Van</option> <option value="Carro">Carro</option> </select>
+       <div><label for="tipo_transporte" class="block text-sm font-medium text-gray-700 mb-2">Tipo de Transporte</label> <select id="tipo_transporte" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"> <option value="">Não utiliza transporte</option> <option value="Ônibus">Ônibus</option> <option value="Microônibus">Microônibus</option> <option value="Van">Van</option> <option value="Carro">Carro</option> </select>
        </div><!-- PCD Checkbox -->
        <div><label class="flex items-center cursor-pointer mt-8"> <input type="checkbox" id="pcd" class="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"> <span class="ml-2 text-sm font-medium text-gray-700">PCD</span> </label>
-       </div><!-- Tipo de Deficiencia (appears when PCD is checked) -->
-       <div id="deficiencia-container" class="md:col-span-2 hidden"><label for="tipo_deficiencia" class="block text-sm font-medium text-gray-700 mb-2">Tipo de Deficiencia *</label> <select id="tipo_deficiencia" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"> <option value="">Selecione</option> <option value="Deficiencia Fisica">Deficiencia Fisica</option> <option value="Deficiencia Visual">Deficiencia Visual</option> <option value="Deficiencia Auditiva">Deficiencia Auditiva</option> <option value="Deficiencia Intelectual">Deficiencia Intelectual</option> <option value="Transtorno do Espectro Autista">Transtorno do Espectro Autista</option> <option value="Deficiencia Multipla">Deficiencia Multipla</option> <option value="Outra">Outra</option> </select>
-       </div><!-- Descricao da Deficiencia -->
-       <div id="descricao-deficiencia-container" class="md:col-span-2 hidden"><label for="descricao_deficiencia" class="block text-sm font-medium text-gray-700 mb-2">Descricao da Deficiencia (Opcional)</label> <textarea id="descricao_deficiencia" rows="2" placeholder="Descreva brevemente a deficiencia e/ou necessidades especiais..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"></textarea>
+       </div><!-- Tipo de Deficiência (appears when PCD is checked) -->
+       <div id="deficiencia-container" class="md:col-span-2 hidden"><label for="tipo_deficiencia" class="block text-sm font-medium text-gray-700 mb-2">Tipo de Deficiência *</label> <select id="tipo_deficiencia" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"> <option value="">Selecione</option> <option value="Deficiência Física">Deficiência Física</option> <option value="Deficiência Visual">Deficiência Visual</option> <option value="Deficiência Auditiva">Deficiência Auditiva</option> <option value="Deficiência Intelectual">Deficiência Intelectual</option> <option value="Transtorno do Espectro Autista">Transtorno do Espectro Autista</option> <option value="Deficiência Múltipla">Deficiência Múltipla</option> <option value="Outra">Outra</option> </select>
+       </div><!-- Descrição da Deficiência -->
+       <div id="descricao-deficiencia-container" class="md:col-span-2 hidden"><label for="descricao_deficiencia" class="block text-sm font-medium text-gray-700 mb-2">Descrição da Deficiência (Opcional)</label> <textarea id="descricao_deficiencia" rows="2" placeholder="Descreva brevemente a deficiência e/ou necessidades especiais..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"></textarea>
        </div><!-- Nome do Pai -->
        <div><label for="nome_pai" class="block text-sm font-medium text-gray-700 mb-2">Nome do Pai</label> <input type="text" id="nome_pai" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-       </div><!-- Nome da Mae -->
-       <div><label for="nome_mae" class="block text-sm font-medium text-gray-700 mb-2">Nome da Mae</label> <input type="text" id="nome_mae" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-       </div><!-- Endereco -->
-       <div class="md:col-span-2"><label for="endereco" class="block text-sm font-medium text-gray-700 mb-2">Endereco Completo</label> <textarea id="endereco" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"></textarea>
+       </div><!-- Nome da Mãe -->
+       <div><label for="nome_mae" class="block text-sm font-medium text-gray-700 mb-2">Nome da Mãe</label> <input type="text" id="nome_mae" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+       </div><!-- Endereço -->
+       <div class="md:col-span-2"><label for="endereco" class="block text-sm font-medium text-gray-700 mb-2">Endereço Completo</label> <textarea id="endereco" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"></textarea>
        </div>
       </div>
       <div class="mt-6 flex gap-3 justify-end"><button type="button" id="btn-cancel" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50"> Cancelar </button> <button type="submit" id="btn-save" class="px-6 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700"> <span id="save-text">Salvar Aluno</span> </button>
@@ -329,86 +329,67 @@
    </div>
   </div>
   <script>
-    // Authentication
+    // Configuração de Autenticação
     const USERS = [
       { name: 'Francisco Silva', password: 'das496431', role: 'Administrador' },
-      { name: 'Gillane', password: 'semed123', role: 'Secretaria de Educacao' },
+      { name: 'Gillâne', password: 'semed123', role: 'Secretária de Educação' },
       { name: 'Coordenadoras', password: 'semed123', role: 'Coordenadora' }
     ];
+
+    // Estado Global
     let isAuthenticated = false;
     let currentUser = '';
     let currentUserRole = '';
-
-    // Data SDK Variables
     let allStudents = [];
     let filteredStudents = [];
     let editingStudent = null;
-    let isDataSdkReady = false;
+    let studentIdCounter = 0;
 
-    // Data SDK Handler
-    const dataHandler = {
-      onDataChanged(data) {
-        allStudents = data;
-        
-        const selectedSchool = document.getElementById('filter-escola').value;
-        const selectedSerie = document.getElementById('filter-serie').value;
-        const nome = document.getElementById('filter-nome').value;
-        
-        if (selectedSchool || selectedSerie || nome) {
-          applyFilters();
-        } else {
-          filteredStudents = allStudents;
-          renderStudentsList();
-        }
-        
-        updateStats();
-      }
-    };
-
-    // Initialize Data SDK
-    async function initializeDataSdk() {
-      if (!window.dataSdk) {
-        showToast('Sistema de dados nao disponivel', 'error');
-        return false;
-      }
-
-      const initResult = await window.dataSdk.init(dataHandler);
-      
-      if (initResult.isOk) {
-        isDataSdkReady = true;
-        return true;
+    // Carregar dados do localStorage
+    function loadStudents() {
+      const stored = localStorage.getItem('students_data');
+      if (stored) {
+        allStudents = JSON.parse(stored);
+        const ids = allStudents.map(s => parseInt(s.id) || 0);
+        studentIdCounter = Math.max(...ids, 0) + 1;
       } else {
-        showToast('Erro ao inicializar sistema de dados', 'error');
-        console.error('Data SDK init error:', initResult.error);
-        return false;
+        allStudents = [];
+        studentIdCounter = 1;
       }
+      filteredStudents = allStudents;
+      updateStats();
+      renderStudentsList();
     }
 
-    // Check if user is already logged in
+    // Salvar dados no localStorage
+    function saveStudents() {
+      localStorage.setItem('students_data', JSON.stringify(allStudents));
+      updateStats();
+    }
+
+    // Verificar autenticação prévia
     const savedUser = localStorage.getItem('logged_user');
     const savedRole = localStorage.getItem('logged_role');
     if (savedUser && savedRole) {
       isAuthenticated = true;
       currentUser = savedUser;
       currentUserRole = savedRole;
-      
       document.getElementById('login-screen').classList.add('hidden');
       document.getElementById('app').classList.remove('hidden');
       document.getElementById('logged-user').textContent = currentUser + ' (' + currentUserRole + ')';
-      
-      initializeDataSdk();
+      loadStudents();
     }
 
     // Login Form Handler
-    document.getElementById('login-form').addEventListener('submit', async (e) => {
+    document.getElementById('login-form').addEventListener('submit', (e) => {
       e.preventDefault();
       
       const userIndex = document.querySelector('input[name="login-user-radio"]:checked')?.value;
       const password = document.getElementById('login-password').value;
       const errorDiv = document.getElementById('login-error');
       
-      if (!userIndex && userIndex !== '0') {
-        errorDiv.textContent = 'Selecione um usuario primeiro.';
+      if (userIndex === undefined || userIndex === null) {
+        errorDiv.textContent = 'Selecione um usuário primeiro.';
         errorDiv.classList.remove('hidden');
         return;
       }
@@ -423,9 +404,8 @@
         localStorage.setItem('logged_role', selectedUser.role);
         errorDiv.classList.add('hidden');
         
-        const sdkReady = await initializeDataSdk();
-        
         showApp();
+        loadStudents();
         showToast('Bem-vindo(a), ' + selectedUser.name + '!', 'success');
       } else {
         errorDiv.textContent = 'Senha incorreta. Tente novamente.';
@@ -495,7 +475,7 @@
         '<td class="border border-gray-300 px-4 py-3 text-sm">' + student.cor + '</td>' +
         '<td class="border border-gray-300 px-4 py-3 text-sm">' + student.localidade + '</td>' +
         '<td class="border border-gray-300 px-4 py-3 text-sm">' + (student.tipo_transporte || '-') + '</td>' +
-        '<td class="border border-gray-300 px-4 py-3 text-sm text-center">' + (student.pcd ? 'Sim' : 'Nao') + '</td>' +
+        '<td class="border border-gray-300 px-4 py-3 text-sm text-center">' + (student.pcd ? 'Sim' : 'Não') + '</td>' +
         '<td class="border border-gray-300 px-4 py-3 text-sm">' +
         '<span class="px-2 py-1 text-xs font-semibold rounded-full ' +
         (student.situacao === 'Ativo' ? 'bg-green-100 text-green-800' :
@@ -506,83 +486,6 @@
         '</tr>'
       ).join('');
     }
-
-    // Download Excel from Table
-    document.getElementById('btn-download-excel').addEventListener('click', async () => {
-      const downloadBtn = document.getElementById('btn-download-excel');
-      const originalBtnHTML = downloadBtn.innerHTML;
-      
-      try {
-        downloadBtn.disabled = true;
-        downloadBtn.innerHTML = '<svg class="animate-spin h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Gerando Excel...';
-        
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
-        const selectedSchool = document.getElementById('filter-escola').value;
-        const selectedSerie = document.getElementById('filter-serie').value;
-        
-        if (!selectedSchool || !selectedSerie) {
-          showToast('Selecione escola e serie antes de gerar o Excel', 'error');
-          return;
-        }
-        
-        const studentsForExcel = allStudents.filter(s => 
-          s.escola === selectedSchool && s.serie_ano === selectedSerie
-        );
-        
-        if (studentsForExcel.length === 0) {
-          showToast('Nenhum aluno encontrado para gerar o Excel', 'error');
-          return;
-        }
-        
-        const excelData = studentsForExcel.map(student => ({
-          'Nome Completo': student.nome_completo,
-          'CPF': student.cpf || '-',
-          'Data de Nascimento': new Date(student.data_nascimento).toLocaleDateString('pt-BR'),
-          'Idade': student.idade,
-          'Sexo': student.sexo,
-          'Cor/Raca': student.cor,
-          'Localidade': student.localidade,
-          'Transporte': student.tipo_transporte || '-',
-          'PCD': student.pcd ? 'Sim' : 'Nao',
-          'Situacao': student.situacao
-        }));
-        
-        const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.json_to_sheet(excelData);
-        
-        ws['!cols'] = [
-          { wch: 35 },
-          { wch: 15 },
-          { wch: 18 },
-          { wch: 8 },
-          { wch: 12 },
-          { wch: 12 },
-          { wch: 20 },
-          { wch: 15 },
-          { wch: 8 },
-          { wch: 12 }
-        ];
-        
-        XLSX.utils.book_append_sheet(wb, ws, 'Alunos');
-        
-        const timestamp = new Date().toISOString().slice(0, 10);
-        const filename = 'Lista_Alunos_' + selectedSchool.replace(/\s+/g, '_') + '_' + selectedSerie.replace(/\s+/g, '_') + '_' + timestamp + '.xlsx';
-        
-        XLSX.writeFile(wb, filename);
-        
-        showToast('Excel gerado com ' + studentsForExcel.length + ' aluno(s)! Verifique sua pasta de Downloads.', 'success');
-        
-      } catch (error) {
-        console.error('Erro ao gerar Excel:', error);
-        showToast('Erro ao gerar Excel: ' + error.message, 'error');
-      } finally {
-        setTimeout(() => {
-          downloadBtn.disabled = false;
-          downloadBtn.innerHTML = originalBtnHTML;
-        }, 800);
-      }
-    });
 
     // Render Students List
     function renderStudentsList() {
@@ -601,7 +504,7 @@
                       student.situacao === 'Transferido' ? 'bg-blue-100 text-blue-800' :
                       'bg-red-100 text-red-800';
         
-        return '<div class="card border border-gray-200 rounded-lg p-5 hover:border-purple-300" data-backend-id="' + student.__backendId + '">' +
+        return '<div class="card border border-gray-200 rounded-lg p-5 hover:border-purple-300" data-student-id="' + student.id + '">' +
           '<div class="flex justify-between items-start">' +
           '<div class="flex-1">' +
           '<div class="flex items-center gap-3 mb-3">' +
@@ -609,10 +512,10 @@
           '<span class="px-3 py-1 text-xs font-semibold rounded-full ' + sitBg + '">' + student.situacao + '</span>' +
           '</div>' +
           '<div class="grid grid-cols-2 md:grid-cols-6 gap-4 text-sm">' +
-          '<div><span class="text-gray-600">CPF:</span> <span class="font-medium text-gray-800 ml-1">' + student.cpf + '</span></div>' +
+          '<div><span class="text-gray-600">CPF:</span> <span class="font-medium text-gray-800 ml-1">' + (student.cpf || '-') + '</span></div>' +
           '<div><span class="text-gray-600">Idade:</span> <span class="font-medium text-gray-800 ml-1">' + student.idade + ' anos</span></div>' +
           '<div><span class="text-gray-600">Sexo:</span> <span class="font-medium text-gray-800 ml-1">' + student.sexo + '</span></div>' +
-          '<div><span class="text-gray-600">Serie:</span> <span class="font-medium text-gray-800 ml-1">' + student.serie_ano + '</span></div>' +
+          '<div><span class="text-gray-600">Série:</span> <span class="font-medium text-gray-800 ml-1">' + student.serie_ano + '</span></div>' +
           '<div><span class="text-gray-600">Localidade:</span> <span class="font-medium text-gray-800 ml-1">' + student.localidade + '</span></div>' +
           '<div><span class="text-gray-600">Escola:</span> <span class="font-medium text-gray-800 ml-1">' + student.escola + '</span></div>' +
           '</div>' +
@@ -622,13 +525,13 @@
           '</div>' +
           '</div>' +
           '<div class="flex gap-2 ml-4">' +
-          '<button onclick="viewStudent(\'' + student.__backendId + '\')" class="text-blue-600 hover:text-blue-800 p-2" title="Ver detalhes">' +
+          '<button onclick="viewStudent(' + student.id + ')" class="text-blue-600 hover:text-blue-800 p-2" title="Ver detalhes">' +
           '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>' +
           '</button>' +
-          '<button onclick="editStudent(\'' + student.__backendId + '\')" class="text-green-600 hover:text-green-800 p-2" title="Editar">' +
+          '<button onclick="editStudent(' + student.id + ')" class="text-green-600 hover:text-green-800 p-2" title="Editar">' +
           '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>' +
           '</button>' +
-          '<button onclick="confirmDelete(\'' + student.__backendId + '\')" class="text-red-600 hover:text-red-800 p-2" title="Excluir">' +
+          '<button onclick="confirmDelete(' + student.id + ')" class="text-red-600 hover:text-red-800 p-2" title="Excluir">' +
           '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>' +
           '</button>' +
           '</div>' +
@@ -654,7 +557,7 @@
     // New Student
     document.getElementById('btn-novo').addEventListener('click', () => {
       if (allStudents.length >= 999) {
-        showToast('Limite maximo de 999 alunos atingido. Exclua alguns alunos primeiro.', 'error');
+        showToast('Limite máximo de 999 alunos atingido. Exclua alguns alunos primeiro.', 'error');
         return;
       }
       openModal('Novo Cadastro');
@@ -665,20 +568,22 @@
     document.getElementById('btn-cancel').addEventListener('click', closeModal);
 
     // View Student Details
-    window.viewStudent = (backendId) => {
-      const student = allStudents.find(s => s.__backendId === backendId);
+    window.viewStudent = (studentId) => {
+      const student = allStudents.find(s => s.id == studentId);
       if (!student) return;
 
       const modal = document.getElementById('modal');
-      modal.querySelector('.max-w-4xl').innerHTML = '<div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center"><h3 class="text-2xl font-bold text-gray-800">Detalhes do Aluno</h3><button onclick="closeModal()" class="text-gray-500 hover:text-gray-700"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></div><div class="p-6"><div class="space-y-4"><div class="grid grid-cols-2 gap-4"><div><strong>Nome Completo:</strong> ' + student.nome_completo + '</div><div><strong>CPF:</strong> ' + student.cpf + '</div><div><strong>Data de Nascimento:</strong> ' + new Date(student.data_nascimento).toLocaleDateString('pt-BR') + '</div><div><strong>Idade:</strong> ' + student.idade + ' anos</div><div><strong>Sexo:</strong> ' + student.sexo + '</div><div><strong>Cor/Raca:</strong> ' + student.cor + '</div><div><strong>Localidade:</strong> ' + student.localidade + '</div><div><strong>Escola:</strong> ' + student.escola + '</div><div><strong>Serie/Ano:</strong> ' + student.serie_ano + '</div><div><strong>Situacao:</strong> ' + student.situacao + '</div><div><strong>Transporte:</strong> ' + (student.tipo_transporte || 'Nao utiliza') + '</div><div><strong>PCD:</strong> ' + (student.pcd ? 'Sim' : 'Nao') + '</div>' + (student.pcd ? '<div><strong>Tipo de Deficiencia:</strong> ' + (student.tipo_deficiencia || 'Nao especificado') + '</div>' : '') + (student.descricao_deficiencia ? '<div class="col-span-2"><strong>Descricao da Deficiencia:</strong> ' + student.descricao_deficiencia + '</div>' : '') + '<div><strong>Nome do Pai:</strong> ' + (student.nome_pai || 'Nao informado') + '</div><div><strong>Nome da Mae:</strong> ' + (student.nome_mae || 'Nao informado') + '</div><div class="col-span-2"><strong>Endereco:</strong> ' + (student.endereco || 'Nao informado') + '</div></div></div><div class="mt-6 flex justify-end"><button onclick="closeModal()" class="px-6 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700">Fechar</button></div></div>';
+      const container = modal.querySelector('.max-w-4xl');
+      
+      container.innerHTML = '<div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center"><h3 class="text-2xl font-bold text-gray-800">Detalhes do Aluno</h3><button onclick="closeModal()" class="text-gray-500 hover:text-gray-700"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></div><div class="p-6"><div class="space-y-4"><div class="grid grid-cols-2 gap-4"><div><strong>Nome Completo:</strong> ' + student.nome_completo + '</div><div><strong>CPF:</strong> ' + (student.cpf || '-') + '</div><div><strong>Data de Nascimento:</strong> ' + new Date(student.data_nascimento).toLocaleDateString('pt-BR') + '</div><div><strong>Idade:</strong> ' + student.idade + ' anos</div><div><strong>Sexo:</strong> ' + student.sexo + '</div><div><strong>Cor/Raça:</strong> ' + student.cor + '</div><div><strong>Localidade:</strong> ' + student.localidade + '</div><div><strong>Escola:</strong> ' + student.escola + '</div><div><strong>Série/Ano:</strong> ' + student.serie_ano + '</div><div><strong>Situação:</strong> ' + student.situacao + '</div><div><strong>Transporte:</strong> ' + (student.tipo_transporte || 'Não utiliza') + '</div><div><strong>PCD:</strong> ' + (student.pcd ? 'Sim' : 'Não') + '</div>' + (student.pcd ? '<div><strong>Tipo de Deficiência:</strong> ' + (student.tipo_deficiencia || 'Não especificado') + '</div>' : '') + (student.descricao_deficiencia ? '<div class="col-span-2"><strong>Descrição da Deficiência:</strong> ' + student.descricao_deficiencia + '</div>' : '') + '<div><strong>Nome do Pai:</strong> ' + (student.nome_pai || 'Não informado') + '</div><div><strong>Nome da Mãe:</strong> ' + (student.nome_mae || 'Não informado') + '</div><div class="col-span-2"><strong>Endereço:</strong> ' + (student.endereco || 'Não informado') + '</div></div></div><div class="mt-6 flex justify-end"><button onclick="closeModal()" class="px-6 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700">Fechar</button></div></div>';
       
       modal.classList.remove('hidden');
       modal.classList.add('flex');
     };
 
     // Edit Student
-    window.editStudent = (backendId) => {
-      const student = allStudents.find(s => s.__backendId === backendId);
+    window.editStudent = (studentId) => {
+      const student = allStudents.find(s => s.id == studentId);
       if (!student) return;
 
       editingStudent = student;
@@ -716,68 +621,47 @@
     };
 
     // Confirm Delete
-    window.confirmDelete = (backendId) => {
-      const student = allStudents.find(s => s.__backendId === backendId);
+    window.confirmDelete = (studentId) => {
+      const student = allStudents.find(s => s.id == studentId);
       if (!student) return;
 
-      const card = document.querySelector('[data-backend-id="' + backendId + '"]');
+      const card = document.querySelector('[data-student-id="' + studentId + '"]');
       const originalContent = card.innerHTML;
       
-      card.innerHTML = '<div class="flex items-center justify-between"><p class="text-lg font-semibold text-red-600">Confirmar exclusao de ' + student.nome_completo + '?</p><div class="flex gap-2"><button onclick="deleteStudent(\'' + backendId + '\')" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Confirmar</button><button onclick="cancelDelete(\'' + backendId + '\', \'' + originalContent.replace(/'/g, "\\'") + '\')" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">Cancelar</button></div></div>';
+      card.innerHTML = '<div class="flex items-center justify-between"><p class="text-lg font-semibold text-red-600">Confirmar exclusão de ' + student.nome_completo + '?</p><div class="flex gap-2"><button onclick="deleteStudent(' + studentId + ')" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Confirmar</button><button onclick="cancelDelete(' + studentId + ')" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">Cancelar</button></div></div>';
     };
 
-    window.cancelDelete = (backendId, originalContent) => {
-      const card = document.querySelector('[data-backend-id="' + backendId + '"]');
-      card.innerHTML = originalContent;
+    window.cancelDelete = (studentId) => {
+      const card = document.querySelector('[data-student-id="' + studentId + '"]');
+      // Recarregar a página para restaurar
+      location.reload();
     };
 
     // Delete Student
-    window.deleteStudent = async (backendId) => {
-      const student = allStudents.find(s => s.__backendId === backendId);
-      if (!student) return;
-
-      const card = document.querySelector('[data-backend-id="' + backendId + '"]');
-      card.innerHTML = '<div class="flex items-center justify-center py-4"><svg class="animate-spin h-8 w-8 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="ml-3 text-gray-600">Excluindo...</span></div>';
-
-      const result = await window.dataSdk.delete(student);
-      
-      if (result.isOk) {
-        showToast('Aluno excluido com sucesso', 'success');
-      } else {
-        showToast('Erro ao excluir: ' + result.error.message, 'error');
-        renderStudentsList();
-      }
+    window.deleteStudent = (studentId) => {
+      allStudents = allStudents.filter(s => s.id != studentId);
+      saveStudents();
+      renderStudentsList();
+      showToast('Aluno excluído com sucesso', 'success');
     };
 
     // Form Submit
-    document.getElementById('student-form').addEventListener('submit', async (e) => {
+    document.getElementById('student-form').addEventListener('submit', (e) => {
       e.preventDefault();
-
-      if (!isDataSdkReady) {
-        showToast('Sistema de dados nao esta pronto. Tente novamente.', 'error');
-        return;
-      }
 
       const cpfInput = document.getElementById('cpf').value;
       
       if (cpfInput) {
         const cpfExists = allStudents.some((student) => 
-          student.cpf === cpfInput && (!editingStudent || student.__backendId !== editingStudent.__backendId)
+          student.cpf === cpfInput && (!editingStudent || student.id !== editingStudent.id)
         );
         
         if (cpfExists) {
-          showToast('Ja existe um aluno cadastrado com este CPF!', 'error');
+          showToast('Já existe um aluno cadastrado com este CPF!', 'error');
           document.getElementById('cpf').focus();
           return;
         }
       }
-
-      const saveBtn = document.getElementById('btn-save');
-      const saveText = document.getElementById('save-text');
-      const originalText = saveText.textContent;
-      
-      saveBtn.disabled = true;
-      saveText.textContent = editingStudent ? 'Atualizando...' : 'Salvando...';
 
       const formData = {
         nome_completo: document.getElementById('nome_completo').value,
@@ -800,38 +684,30 @@
         data_cadastro: new Date().toISOString()
       };
 
-      let result;
-      
       if (editingStudent !== null) {
         const updatedStudent = { ...editingStudent, ...formData };
-        result = await window.dataSdk.update(updatedStudent);
-        
-        if (result.isOk) {
-          showToast('Aluno atualizado com sucesso!', 'success');
-          closeModal();
-        } else {
-          showToast('Erro ao atualizar: ' + result.error.message, 'error');
+        const index = allStudents.findIndex(s => s.id === editingStudent.id);
+        if (index !== -1) {
+          allStudents[index] = updatedStudent;
         }
+        showToast('Aluno atualizado com sucesso!', 'success');
       } else {
         if (allStudents.length >= 999) {
-          showToast('Limite maximo de 999 alunos atingido!', 'error');
-          saveBtn.disabled = false;
-          saveText.textContent = originalText;
+          showToast('Limite máximo de 999 alunos atingido!', 'error');
           return;
         }
         
-        result = await window.dataSdk.create(formData);
-        
-        if (result.isOk) {
-          showToast('Aluno cadastrado com sucesso!', 'success');
-          closeModal();
-        } else {
-          showToast('Erro ao cadastrar: ' + result.error.message, 'error');
-        }
+        const newStudent = {
+          id: studentIdCounter++,
+          ...formData
+        };
+        allStudents.push(newStudent);
+        showToast('Aluno cadastrado com sucesso!', 'success');
       }
 
-      saveBtn.disabled = false;
-      saveText.textContent = originalText;
+      saveStudents();
+      closeModal();
+      renderStudentsList();
     });
 
     // PCD Toggle
@@ -884,7 +760,7 @@
           .map(s => s.serie_ano)
       )].sort();
       
-      seriesSelect.innerHTML = '<option value="">Todas as series</option>' + 
+      seriesSelect.innerHTML = '<option value="">Todas as séries</option>' + 
         series.map(serie => '<option value="' + serie + '">' + serie + '</option>').join('');
     }
 
@@ -915,7 +791,9 @@
         renderStudentsList();
       }
       
-      showToast(filteredStudents.length + ' aluno(s) encontrado(s)', 'success');
+      if (selectedSchool || selectedSerie || nome) {
+        showToast(filteredStudents.length + ' aluno(s) encontrado(s)', 'success');
+      }
     }
 
     // Filter Functions
@@ -1012,7 +890,7 @@
             .map(s => s.serie_ano)
         )].sort();
         
-        exportSerieSelect.innerHTML = '<option value="">Escolha uma serie/ano</option>' + 
+        exportSerieSelect.innerHTML = '<option value="">Escolha uma série/ano</option>' + 
           series.map(serie => '<option value="' + serie + '">' + serie + '</option>').join('');
         
         previewSection.classList.add('hidden');
@@ -1070,16 +948,16 @@
         'Data de Nascimento': new Date(student.data_nascimento).toLocaleDateString('pt-BR'),
         'Idade': student.idade,
         'Sexo': student.sexo,
-        'Cor/Raca': student.cor,
+        'Cor/Raça': student.cor,
         'Localidade': student.localidade,
         'Escola': student.escola,
-        'Serie/Ano': student.serie_ano,
-        'Situacao': student.situacao,
+        'Série/Ano': student.serie_ano,
+        'Situação': student.situacao,
         'Transporte': student.tipo_transporte || '-',
-        'PCD': student.pcd ? 'Sim' : 'Nao',
+        'PCD': student.pcd ? 'Sim' : 'Não',
         'Nome do Pai': student.nome_pai || '',
-        'Nome da Mae': student.nome_mae || '',
-        'Endereco': student.endereco || ''
+        'Nome da Mãe': student.nome_mae || '',
+        'Endereço': student.endereco || ''
       }));
       
       const wb = XLSX.utils.book_new();
@@ -1141,7 +1019,7 @@
             .map(s => s.serie_ano)
         )].sort();
         
-        pdfSerieSelect.innerHTML = '<option value="">Escolha uma serie/ano</option>' + 
+        pdfSerieSelect.innerHTML = '<option value="">Escolha uma série/ano</option>' + 
           series.map(serie => '<option value="' + serie + '">' + serie + '</option>').join('');
         
         previewSection.classList.add('hidden');
@@ -1177,14 +1055,14 @@
     });
 
     // PDF Form Submit
-    document.getElementById('pdf-form').addEventListener('submit', async (e) => {
+    document.getElementById('pdf-form').addEventListener('submit', (e) => {
       e.preventDefault();
       
       const selectedSchool = document.getElementById('pdf-escola').value;
       const selectedSerie = document.getElementById('pdf-serie').value;
       
       if (!selectedSchool || !selectedSerie) {
-        showToast('Selecione escola e serie', 'error');
+        showToast('Selecione escola e série', 'error');
         return;
       }
       
@@ -1197,55 +1075,39 @@
         return;
       }
 
-      const confirmBtn = document.getElementById('btn-confirm-pdf');
-      const originalBtnHTML = confirmBtn.innerHTML;
+      let tableRows = '';
+      studentsToPdf.forEach((student, index) => {
+        tableRows += '<tr>';
+        tableRows += '<td style="text-align: center">' + (index + 1) + '</td>';
+        tableRows += '<td>' + student.nome_completo + '</td>';
+        tableRows += '<td>' + (student.cpf || '-') + '</td>';
+        tableRows += '<td>' + new Date(student.data_nascimento).toLocaleDateString('pt-BR') + '</td>';
+        tableRows += '<td style="text-align: center">' + student.idade + '</td>';
+        tableRows += '<td>' + student.sexo.charAt(0).toUpperCase() + '</td>';
+        tableRows += '<td>' + student.cor + '</td>';
+        tableRows += '<td>' + student.localidade + '</td>';
+        tableRows += '<td style="font-weight: bold; text-align: center">' + student.situacao + '</td>';
+        let obs = '';
+        if (student.tipo_transporte) obs += 'Transporte: ' + student.tipo_transporte;
+        if (student.pcd) obs += (obs ? ' | ' : '') + 'PCD';
+        tableRows += '<td>' + obs + '</td>';
+        tableRows += '</tr>';
+      });
+
+      const pdfHTML = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Relatório de Alunos</title><style>* { margin: 0; padding: 0; box-sizing: border-box; } body { font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif; color: #333; padding: 20px; background: white; } .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 15px; } .header h1 { margin: 0 0 10px 0; color: #2c3e50; font-size: 22px; } .header p { margin: 3px 0; color: #666; font-size: 12px; } table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 10px; } th { background-color: #34495e; color: white; padding: 8px; text-align: left; font-weight: bold; border: 1px solid #222; } td { padding: 7px; border: 1px solid #ddd; } tr:nth-child(even) { background-color: #f9f9f9; } .footer { margin-top: 25px; text-align: center; font-size: 9px; color: #999; border-top: 1px solid #ddd; padding-top: 10px; } @media print { body { padding: 0; } table { page-break-inside: avoid; } tr { page-break-inside: avoid; } }</style></head><body><div class="header"><h1>Relatório de Alunos</h1><p><strong>Escola:</strong> ' + selectedSchool + '</p><p><strong>Série/Ano:</strong> ' + selectedSerie + '</p><p><strong>Total de Alunos:</strong> ' + studentsToPdf.length + '</p><p><strong>Data:</strong> ' + new Date().toLocaleDateString('pt-BR') + ' às ' + new Date().toLocaleTimeString('pt-BR') + '</p></div><table><thead><tr><th style="width: 4%">#</th><th style="width: 18%">Nome Completo</th><th style="width: 10%">CPF</th><th style="width: 9%">Nasc.</th><th style="width: 5%">Idade</th><th style="width: 7%">Sexo</th><th style="width: 10%">Cor/Raça</th><th style="width: 12%">Localidade</th><th style="width: 10%">Situação</th><th style="width: 15%">Observações</th></tr></thead><tbody>' + tableRows + '</tbody></table><div class="footer"><p><strong>Secretaria Municipal de Cocal dos Alves</strong></p><p>Sistema de Cadastro de Alunos - Documento gerado automaticamente</p></div></body></html>';
+
+      const blob = new Blob([pdfHTML], { type: 'text/html' });
+      const blobUrl = URL.createObjectURL(blob);
+      const printWindow = window.open(blobUrl, '_blank');
       
-      try {
-        confirmBtn.disabled = true;
-        confirmBtn.innerHTML = '<svg class="animate-spin h-5 w-5 text-white inline mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Gerando PDF...';
-
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-        let tableRows = '';
-        studentsToPdf.forEach((student, index) => {
-          tableRows += '<tr>';
-          tableRows += '<td style="text-align: center">' + (index + 1) + '</td>';
-          tableRows += '<td>' + student.nome_completo + '</td>';
-          tableRows += '<td>' + (student.cpf || '-') + '</td>';
-          tableRows += '<td>' + new Date(student.data_nascimento).toLocaleDateString('pt-BR') + '</td>';
-          tableRows += '<td style="text-align: center">' + student.idade + '</td>';
-          tableRows += '<td>' + student.sexo.charAt(0).toUpperCase() + '</td>';
-          tableRows += '<td>' + student.cor + '</td>';
-          tableRows += '<td>' + student.localidade + '</td>';
-          tableRows += '<td style="font-weight: bold; text-align: center">' + student.situacao + '</td>';
-          let obs = '';
-          if (student.tipo_transporte) obs += 'Transporte: ' + student.tipo_transporte;
-          if (student.pcd) obs += (obs ? ' | ' : '') + 'PCD';
-          tableRows += '<td>' + obs + '</td>';
-          tableRows += '</tr>';
-        });
-
-        const pdfHTML = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Relatorio de Alunos</title><style>* { margin: 0; padding: 0; box-sizing: border-box; } body { font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif; color: #333; padding: 20px; background: white; } .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 15px; } .header h1 { margin: 0 0 10px 0; color: #2c3e50; font-size: 22px; } .header p { margin: 3px 0; color: #666; font-size: 12px; } table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 10px; } th { background-color: #34495e; color: white; padding: 8px; text-align: left; font-weight: bold; border: 1px solid #222; } td { padding: 7px; border: 1px solid #ddd; } tr:nth-child(even) { background-color: #f9f9f9; } .footer { margin-top: 25px; text-align: center; font-size: 9px; color: #999; border-top: 1px solid #ddd; padding-top: 10px; } @media print { body { padding: 0; } table { page-break-inside: avoid; } tr { page-break-inside: avoid; } }</style></head><body><div class="header"><h1>Relatorio de Alunos</h1><p><strong>Escola:</strong> ' + selectedSchool + '</p><p><strong>Serie/Ano:</strong> ' + selectedSerie + '</p><p><strong>Total de Alunos:</strong> ' + studentsToPdf.length + '</p><p><strong>Data:</strong> ' + new Date().toLocaleDateString('pt-BR') + ' as ' + new Date().toLocaleTimeString('pt-BR') + '</p></div><table><thead><tr><th style="width: 4%">#</th><th style="width: 18%">Nome Completo</th><th style="width: 10%">CPF</th><th style="width: 9%">Nasc.</th><th style="width: 5%">Idade</th><th style="width: 7%">Sexo</th><th style="width: 10%">Cor/Raca</th><th style="width: 12%">Localidade</th><th style="width: 10%">Situacao</th><th style="width: 15%">Observacoes</th></tr></thead><tbody>' + tableRows + '</tbody></table><div class="footer"><p><strong>Secretaria Municipal de Cocal dos Alves</strong></p><p>Sistema de Cadastro de Alunos - Documento gerado automaticamente</p></div></body></html>';
-
-        const blob = new Blob([pdfHTML], { type: 'text/html' });
-        const blobUrl = URL.createObjectURL(blob);
-        const printWindow = window.open(blobUrl, '_blank');
-        
-        if (printWindow) {
-          showToast('Janela de impressao aberta! Use Ctrl+P para salvar como PDF', 'success');
-        } else {
-          showToast('Pop-ups bloqueados no navegador', 'error');
-        }
-        
-        closePdfModal();
-        
-      } catch (error) {
-        showToast('Erro ao gerar PDF', 'error');
-      } finally {
-        confirmBtn.disabled = false;
-        confirmBtn.innerHTML = originalBtnHTML;
+      if (printWindow) {
+        showToast('Janela de impressão aberta! Use Ctrl+P para salvar como PDF', 'success');
+      } else {
+        showToast('Pop-ups bloqueados no navegador', 'error');
       }
+      
+      closePdfModal();
     });
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9ba7dc51106cf623',t:'MTc2NzgzNTEwMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9bb399de20394f7d',t:'MTc2Nzk1ODIxMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
