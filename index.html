@@ -8,7 +8,7 @@
   <title>Sistema de Cadastro de Alunos - Rede Municipal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>����</text></svg>">
   <style>
     body {
       box-sizing: border-box;
@@ -154,8 +154,10 @@
         </div>
        </div>
       </div>
-     </div><!-- Action Buttons -->
-     <div class="mb-6 flex gap-4 flex-wrap"><button id="btn-novo" class="btn-primary bg-white text-purple-700 px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-gray-50"> Novo Cadastro </button> <button id="btn-filtrar" class="bg-purple-800 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-purple-900"> Filtrar </button> <button id="btn-pdf" class="bg-red-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-red-700 flex items-center gap-2">
+     </div><!-- Tab Navigation -->
+     <div id="tabs-container" class="mb-6 flex gap-2 bg-white rounded-lg shadow-lg p-1"><button id="tab-alunos" class="tab-btn active px-6 py-3 rounded-lg font-semibold transition-all"> 📚 Alunos </button> <button id="tab-historico" class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all hidden"> 📋 Histórico </button>
+     </div><!-- Action Buttons for Alunos Tab -->
+     <div id="alunos-actions" class="mb-6 flex gap-4 flex-wrap"><button id="btn-novo" class="btn-primary bg-white text-purple-700 px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-gray-50"> Novo Cadastro </button> <button id="btn-filtrar" class="bg-purple-800 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-purple-900"> Filtrar </button> <button id="btn-pdf" class="bg-red-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-red-700 flex items-center gap-2">
        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
        </svg> Baixar PDF </button> <button id="btn-excel" class="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-green-700 flex items-center gap-2">
        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -170,15 +172,55 @@
        <div class="border-t pt-4 mb-4"><label class="block text-sm font-medium text-gray-700 mb-2">Buscar por Nome</label> <input type="text" id="filter-nome" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Digite o nome do aluno">
        </div>
       </div><button id="btn-limpar-filtro" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-400"> Limpar Filtros </button>
-     </div><!-- Students List -->
-     <div class="bg-white rounded-lg shadow-lg p-6 mb-8" id="students-list-container">
-      <h2 class="text-2xl font-bold text-gray-800 mb-6">Lista de Alunos</h2>
-      <div id="students-list" class="space-y-4"></div>
-      <div id="empty-state" class="text-center py-12">
-       <svg class="w-24 h-24 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-       </svg>
-       <p class="text-gray-500 text-lg">Nenhum aluno cadastrado ainda</p>
-       <p class="text-gray-400 text-sm mt-2">Clique em "Novo Cadastro" para adicionar o primeiro aluno</p>
+     </div><!-- Students List Tab Content -->
+     <div id="tab-content-alunos" class="tab-content"><!-- Students List -->
+      <div class="bg-white rounded-lg shadow-lg p-6 mb-8" id="students-list-container">
+       <h2 class="text-2xl font-bold text-gray-800 mb-6">Lista de Alunos</h2>
+       <div id="students-list" class="space-y-4"></div>
+       <div id="empty-state" class="text-center py-12">
+        <svg class="w-24 h-24 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+        </svg>
+        <p class="text-gray-500 text-lg">Nenhum aluno cadastrado ainda</p>
+        <p class="text-gray-400 text-sm mt-2">Clique em "Novo Cadastro" para adicionar o primeiro aluno</p>
+       </div>
+      </div>
+     </div><!-- History Tab Content -->
+     <div id="tab-content-historico" class="tab-content hidden">
+      <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+       <h2 class="text-2xl font-bold text-gray-800 mb-6">Histórico de Operações</h2><!-- Filter for History -->
+       <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+         <div><label class="block text-sm font-medium text-gray-700 mb-2">Filtrar por Usuário</label> <select id="history-filter-user" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"> <option value="">Todos os usuários</option> </select>
+         </div>
+         <div><label class="block text-sm font-medium text-gray-700 mb-2">Filtrar por Tipo</label> <select id="history-filter-type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"> <option value="">Todos os tipos</option> <option value="Criação">Criação</option> <option value="Edição">Edição</option> <option value="Exclusão">Exclusão</option> </select>
+         </div>
+         <div class="flex items-end"><button id="btn-limpar-history-filtro" class="w-full bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-400"> Limpar Filtros </button>
+         </div>
+        </div>
+       </div><!-- History Actions -->
+       <div class="mb-4 flex gap-3"><button id="btn-limpar-historico" class="bg-red-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-red-700 flex items-center gap-2">
+         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+         </svg> Limpar Histórico </button> <span id="history-count" class="text-sm text-gray-600 flex items-center">Total: 0 registros</span>
+       </div><!-- History Table -->
+       <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+         <thead class="bg-purple-100 border-b-2 border-purple-600">
+          <tr>
+           <th class="px-4 py-3 text-left font-bold text-gray-800">Data/Hora</th>
+           <th class="px-4 py-3 text-left font-bold text-gray-800">Usuário</th>
+           <th class="px-4 py-3 text-left font-bold text-gray-800">Tipo</th>
+           <th class="px-4 py-3 text-left font-bold text-gray-800">Aluno</th>
+           <th class="px-4 py-3 text-left font-bold text-gray-800">Detalhes</th>
+           <th class="px-4 py-3 text-center font-bold text-gray-800">Ação</th>
+          </tr>
+         </thead>
+         <tbody id="history-table-body" class="divide-y divide-gray-200">
+          <tr>
+           <td colspan="6" class="px-4 py-8 text-center text-gray-500">Nenhum registro no histórico</td>
+          </tr>
+         </tbody>
+        </table>
+       </div>
       </div>
      </div>
     </main><!-- Footer -->
@@ -314,6 +356,7 @@
     let editingStudent = null;
     let studentIdCounter = 1;
     let studentDocuments = {};
+    let auditLog = [];
 
     function loadStudents() {
       const stored = localStorage.getItem('students_data');
@@ -335,10 +378,209 @@
           studentDocuments = {};
         }
       }
+      const storedAudit = localStorage.getItem('audit_log');
+      if (storedAudit) {
+        try {
+          auditLog = JSON.parse(storedAudit);
+        } catch (e) {
+          auditLog = [];
+        }
+      }
       filteredStudents = [...allStudents];
       updateStats();
       renderStudentsList();
+      setupRoleBasedAccess();
+      renderHistoryTable();
     }
+
+    function setupRoleBasedAccess() {
+      const tabHistorico = document.getElementById('tab-historico');
+      const btnNovo = document.getElementById('btn-novo');
+      const btnFiltrar = document.getElementById('btn-filtrar');
+      const alunosActions = document.getElementById('alunos-actions');
+      
+      // Mostrar aba de histórico apenas para Administrador
+      if (currentUserRole === 'Administrador') {
+        tabHistorico.classList.remove('hidden');
+      } else {
+        tabHistorico.classList.add('hidden');
+      }
+
+      // Secretária: apenas visualização
+      if (currentUserRole === 'Secretária de Educação') {
+        btnNovo.disabled = true;
+        btnNovo.classList.add('opacity-50', 'cursor-not-allowed');
+        btnNovo.title = 'Apenas coordenadoras podem criar novos alunos';
+        
+        // Esconder botões de ação em cada card para secretária
+        setTimeout(() => {
+          document.querySelectorAll('.students-action-buttons').forEach(btn => {
+            btn.innerHTML = `<button class="inline-flex items-center justify-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium text-sm transition-all cursor-pointer" onclick="viewStudent(this.dataset.id)"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>Ver</button>`;
+          });
+        }, 100);
+      }
+    }
+
+    function addAuditLog(type, studentName, studentId, details = '') {
+      const timestamp = new Date().toISOString();
+      auditLog.push({
+        timestamp,
+        user: currentUser,
+        userRole: currentUserRole,
+        type, // 'Criação', 'Edição', 'Exclusão'
+        studentName,
+        studentId,
+        details
+      });
+      localStorage.setItem('audit_log', JSON.stringify(auditLog));
+    }
+
+    function renderHistoryTable() {
+      const tbody = document.getElementById('history-table-body');
+      const userFilter = document.getElementById('history-filter-user')?.value || '';
+      const typeFilter = document.getElementById('history-filter-type')?.value || '';
+
+      let filtered = auditLog;
+      if (userFilter) {
+        filtered = filtered.filter(log => log.user === userFilter);
+      }
+      if (typeFilter) {
+        filtered = filtered.filter(log => log.type === typeFilter);
+      }
+
+      const users = [...new Set(auditLog.map(log => log.user))];
+      const userSelect = document.getElementById('history-filter-user');
+      if (userSelect) {
+        const current = userSelect.value;
+        userSelect.innerHTML = '<option value="">Todos os usuários</option>' + 
+          users.map(u => `<option value="${u}">${u}</option>`).join('');
+        userSelect.value = current;
+      }
+
+      // Atualizar contador
+      document.getElementById('history-count').textContent = `Total: ${auditLog.length} registros`;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">Nenhum registro encontrado</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtered.reverse().map((log, index) => {
+        const date = new Date(log.timestamp);
+        const dateStr = date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR');
+        const typeIcon = log.type === 'Criação' ? '✅' : log.type === 'Edição' ? '✏️' : '❌';
+        const typeBg = log.type === 'Criação' ? 'bg-green-100 text-green-800' : 
+                       log.type === 'Edição' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800';
+        
+        // Encontrar o índice real no array (como está em ordem reversa)
+        const realIndex = auditLog.length - 1 - index;
+        
+        return `<tr class="hover:bg-gray-50">
+          <td class="px-4 py-3 text-gray-700">${dateStr}</td>
+          <td class="px-4 py-3 font-medium text-gray-800">${log.user}</td>
+          <td class="px-4 py-3">
+            <span class="px-3 py-1 text-xs font-semibold rounded-full ${typeBg}">
+              ${typeIcon} ${log.type}
+            </span>
+          </td>
+          <td class="px-4 py-3 text-gray-800">${log.studentName}</td>
+          <td class="px-4 py-3 text-gray-600 text-xs">${log.details}</td>
+          <td class="px-4 py-3 text-center">
+            <button type="button" onclick="deleteHistoryRecord(${realIndex})" class="text-red-600 hover:text-red-800 font-medium text-xs px-2 py-1 hover:bg-red-50 rounded transition-all" title="Deletar este registro">
+              ✕ Deletar
+            </button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    window.deleteHistoryRecord = (index) => {
+      const log = auditLog[index];
+      const modal = document.createElement('div');
+      modal.className = 'fixed inset-0 modal-overlay flex items-center justify-center p-4 z-50';
+      modal.id = 'delete-history-modal';
+      modal.innerHTML = `
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full">
+          <div class="bg-red-600 text-white px-6 py-4 rounded-t-xl">
+            <h3 class="text-2xl font-bold">Excluir Registro do Histórico</h3>
+          </div>
+          <div class="p-6">
+            <p class="text-gray-800 mb-4"><strong>Confirmar exclusão deste registro?</strong></p>
+            <div class="bg-gray-50 p-4 rounded-lg text-sm mb-4">
+              <p class="mb-1"><strong>Data:</strong> ${new Date(log.timestamp).toLocaleString('pt-BR')}</p>
+              <p class="mb-1"><strong>Usuário:</strong> ${log.user}</p>
+              <p class="mb-1"><strong>Tipo:</strong> ${log.type}</p>
+              <p><strong>Aluno:</strong> ${log.studentName}</p>
+            </div>
+            <p class="text-gray-500 text-sm">Esta ação não pode ser desfeita</p>
+          </div>
+          <div class="flex gap-3 justify-end p-6 border-t">
+            <button onclick="cancelDeleteHistoryModal()" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50">
+              Cancelar
+            </button>
+            <button onclick="confirmDeleteHistoryRecord(${index})" class="px-6 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700">
+              Sim, deletar
+            </button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    };
+
+    window.cancelDeleteHistoryModal = () => {
+      const modal = document.getElementById('delete-history-modal');
+      if (modal) modal.remove();
+    };
+
+    window.confirmDeleteHistoryRecord = (index) => {
+      auditLog.splice(index, 1);
+      localStorage.setItem('audit_log', JSON.stringify(auditLog));
+      renderHistoryTable();
+      const modal = document.getElementById('delete-history-modal');
+      if (modal) modal.remove();
+      showToast('Registro do histórico excluído', 'success');
+    };
+
+    window.clearAllHistory = () => {
+      const modal = document.createElement('div');
+      modal.className = 'fixed inset-0 modal-overlay flex items-center justify-center p-4 z-50';
+      modal.id = 'clear-all-history-modal';
+      modal.innerHTML = `
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full">
+          <div class="bg-red-600 text-white px-6 py-4 rounded-t-xl">
+            <h3 class="text-2xl font-bold">Limpar Todo o Histórico</h3>
+          </div>
+          <div class="p-6">
+            <p class="text-gray-800 mb-4"><strong>⚠️ Atenção!</strong></p>
+            <p class="text-gray-700 mb-4">Você está prestes a excluir <strong>${auditLog.length} registros</strong> do histórico.</p>
+            <p class="text-gray-600 text-sm">Esta ação é <strong>irreversível</strong> e não poderá ser desfeita.</p>
+          </div>
+          <div class="flex gap-3 justify-end p-6 border-t">
+            <button onclick="cancelClearAllHistory()" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50">
+              Cancelar
+            </button>
+            <button onclick="confirmClearAllHistory()" class="px-6 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700">
+              Sim, limpar tudo
+            </button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    };
+
+    window.cancelClearAllHistory = () => {
+      const modal = document.getElementById('clear-all-history-modal');
+      if (modal) modal.remove();
+    };
+
+    window.confirmClearAllHistory = () => {
+      auditLog = [];
+      localStorage.setItem('audit_log', JSON.stringify(auditLog));
+      renderHistoryTable();
+      const modal = document.getElementById('clear-all-history-modal');
+      if (modal) modal.remove();
+      showToast('✅ Histórico completamente limpo', 'success');
+    };
 
     function saveStudents() {
       localStorage.setItem('students_data', JSON.stringify(allStudents));
@@ -621,12 +863,18 @@
     };
 
     window.deleteStudent = (studentId) => {
+      const student = allStudents.find(s => s.id == studentId);
       allStudents = allStudents.filter(s => s.id != studentId);
       delete studentDocuments[studentId];
+      
+      // Registrar no histórico
+      addAuditLog('Exclusão', student.nome_completo, studentId, `Série: ${student.serie_ano}, Escola: ${student.escola}`);
+      
       saveStudents();
       const modal = document.getElementById('delete-modal-' + studentId);
       if (modal) modal.remove();
       renderStudentsList();
+      renderHistoryTable();
       showToast('✅ Aluno excluído com sucesso', 'success');
     };
 
@@ -685,6 +933,9 @@
             delete studentDocuments['new'];
           }
           
+          // Registrar no histórico
+          addAuditLog('Edição', formData.nome_completo, studentId, `Série: ${formData.serie_ano}, Escola: ${formData.escola}`);
+          
           showToast('✅ Aluno atualizado com sucesso!', 'success');
         }
       } else {
@@ -697,6 +948,9 @@
           studentDocuments[newId] = studentDocuments['new'];
           delete studentDocuments['new'];
         }
+        
+        // Registrar no histórico
+        addAuditLog('Criação', formData.nome_completo, newId, `Série: ${formData.serie_ano}, Escola: ${formData.escola}`);
         
         showToast('✅ Aluno cadastrado com sucesso!', 'success');
       }
@@ -726,7 +980,21 @@
       container.innerHTML = filteredStudents.map(student => {
         const sitBg = student.situacao === 'Ativo' ? 'bg-green-100 text-green-800' : student.situacao === 'Transferido' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800';
         const docCount = studentDocuments[student.id] ? studentDocuments[student.id].length : 0;
-        return `<div class="card border border-gray-200 rounded-lg p-5"><div class="flex flex-col"><div class="flex items-center gap-3 mb-3"><h3 class="text-xl font-bold text-gray-800 flex-1">${student.nome_completo}</h3><span class="px-3 py-1 text-xs font-semibold rounded-full ${sitBg}">${student.situacao}</span></div><div class="grid grid-cols-2 md:grid-cols-6 gap-4 text-sm mb-3"><div><span class="text-gray-600">CPF:</span> ${student.cpf || '-'}</div><div><span class="text-gray-600">Idade:</span> ${student.idade}a</div><div><span class="text-gray-600">Sexo:</span> ${student.sexo}</div><div><span class="text-gray-600">Série:</span> ${student.serie_ano}</div><div><span class="text-gray-600">Localidade:</span> ${student.localidade}</div><div><span class="text-gray-600">Escola:</span> ${student.escola}</div></div><div class="flex gap-2 mb-3 flex-wrap">${student.tipo_transporte ? `<span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">${student.tipo_transporte}</span>` : ''}${student.pcd ? '<span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">PCD</span>' : ''}${docCount > 0 ? `<span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">📄 ${docCount} doc(s)</span>` : ''}</div></div><div class="flex gap-2 flex-wrap pt-3 border-t"><button type="button" class="inline-flex items-center justify-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium text-sm transition-all cursor-pointer" onclick="viewStudent(${student.id})"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>Ver</button><button type="button" class="inline-flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium text-sm transition-all cursor-pointer" onclick="editStudent(${student.id})"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>Editar</button><button type="button" class="inline-flex items-center justify-center gap-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded font-medium text-sm transition-all cursor-pointer" onclick="confirmDelete(${student.id})"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>Deletar</button></div>`;
+        
+        let actionButtons = '';
+        if (currentUserRole === 'Secretária de Educação') {
+          // Apenas visualizar
+          actionButtons = `<button type="button" class="inline-flex items-center justify-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium text-sm transition-all cursor-pointer" onclick="viewStudent(${student.id})"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>Ver</button>`;
+        } else {
+          // Administrador e Coordenadoras: visualizar, editar e deletar
+          actionButtons = `
+            <button type="button" class="inline-flex items-center justify-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium text-sm transition-all cursor-pointer" onclick="viewStudent(${student.id})"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>Ver</button>
+            <button type="button" class="inline-flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium text-sm transition-all cursor-pointer" onclick="editStudent(${student.id})"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>Editar</button>
+            <button type="button" class="inline-flex items-center justify-center gap-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded font-medium text-sm transition-all cursor-pointer" onclick="confirmDelete(${student.id})"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>Deletar</button>
+          `;
+        }
+        
+        return `<div class="card border border-gray-200 rounded-lg p-5"><div class="flex flex-col"><div class="flex items-center gap-3 mb-3"><h3 class="text-xl font-bold text-gray-800 flex-1">${student.nome_completo}</h3><span class="px-3 py-1 text-xs font-semibold rounded-full ${sitBg}">${student.situacao}</span></div><div class="grid grid-cols-2 md:grid-cols-6 gap-4 text-sm mb-3"><div><span class="text-gray-600">CPF:</span> ${student.cpf || '-'}</div><div><span class="text-gray-600">Idade:</span> ${student.idade}a</div><div><span class="text-gray-600">Sexo:</span> ${student.sexo}</div><div><span class="text-gray-600">Série:</span> ${student.serie_ano}</div><div><span class="text-gray-600">Localidade:</span> ${student.localidade}</div><div><span class="text-gray-600">Escola:</span> ${student.escola}</div></div><div class="flex gap-2 mb-3 flex-wrap">${student.tipo_transporte ? `<span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">${student.tipo_transporte}</span>` : ''}${student.pcd ? '<span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">PCD</span>' : ''}${docCount > 0 ? `<span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">📄 ${docCount} doc(s)</span>` : ''}</div></div><div class="flex gap-2 flex-wrap pt-3 border-t students-action-buttons">${actionButtons}</div>`;
       }).join('');
     }
 
@@ -860,6 +1128,50 @@
       filteredStudents = [...allStudents];
       renderStudentsList();
     });
+
+    // TAB SWITCHING
+    document.getElementById('tab-alunos').addEventListener('click', () => {
+      document.getElementById('tab-content-alunos').classList.remove('hidden');
+      document.getElementById('tab-content-historico').classList.add('hidden');
+      document.getElementById('tab-alunos').classList.add('active');
+      document.getElementById('tab-historico').classList.remove('active');
+      document.getElementById('filter-section').classList.add('hidden');
+      document.getElementById('alunos-actions').style.display = 'flex';
+    });
+
+    document.getElementById('tab-historico').addEventListener('click', () => {
+      document.getElementById('tab-content-alunos').classList.add('hidden');
+      document.getElementById('tab-content-historico').classList.remove('hidden');
+      document.getElementById('tab-alunos').classList.remove('active');
+      document.getElementById('tab-historico').classList.add('active');
+      document.getElementById('filter-section').classList.add('hidden');
+      document.getElementById('alunos-actions').style.display = 'none';
+      renderHistoryTable();
+    });
+
+    document.getElementById('history-filter-user').addEventListener('change', renderHistoryTable);
+    document.getElementById('history-filter-type').addEventListener('change', renderHistoryTable);
+    
+    document.getElementById('btn-limpar-history-filtro').addEventListener('click', () => {
+      document.getElementById('history-filter-user').value = '';
+      document.getElementById('history-filter-type').value = '';
+      renderHistoryTable();
+    });
+
+    document.getElementById('btn-limpar-historico').addEventListener('click', clearAllHistory);
+
+    // Add active styling to tabs
+    const style = document.createElement('style');
+    style.textContent = `
+      .tab-btn {
+        color: #6B7280;
+      }
+      .tab-btn.active {
+        color: #9333EA;
+        border-bottom: 3px solid #9333EA;
+      }
+    `;
+    document.head.appendChild(style);
 
     // EXCEL DOWNLOAD
     document.getElementById('btn-excel').addEventListener('click', () => {
@@ -1012,5 +1324,5 @@
       document.getElementById('pdf-modal').classList.add('hidden');
     });
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9bb8a71d02c4f612',t:'MTc2ODAxMTE4MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9bb8c151d3caf61a',t:'MTc2ODAxMjI1NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
