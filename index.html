@@ -223,7 +223,7 @@
        </div>
        <div><label for="situacao" class="block text-sm font-medium text-gray-700 mb-2">Situação *</label> <select id="situacao" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"> <option value="">Selecione</option> <option value="Ativo">Ativo</option> <option value="Transferido">Transferido</option> <option value="Evadido">Evadido</option> </select>
        </div>
-       <div><label for="tipo_transporte" class="block text-sm font-medium text-gray-700 mb-2">Tipo de Transporte</label> <select id="tipo_transporte" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"> <option value="">Não utiliza transporte</option> <option value="Ônibus">Ônibus</option> <option value="Microônibus">Microônibus</option> <option value="Van">Van</option> <option value="Carro">Carro</option> </select>
+       <div><label for="tipo_transporte" class="block text-sm font-medium text-gray-700 mb-2">Tipo de Transporte</label> <select id="tipo_transporte" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"> <option value="">Não utiliza transporte</option> <option value="Ônibus">Ônibus</option> <option value="Microônibus">Micro����nibus</option> <option value="Van">Van</option> <option value="Carro">Carro</option> </select>
        </div>
        <div><label class="flex items-center cursor-pointer mt-8"> <input type="checkbox" id="pcd" class="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"> <span class="ml-2 text-sm font-medium text-gray-700">PCD</span> </label>
        </div>
@@ -550,7 +550,7 @@
         showToast('Aluno não encontrado', 'error');
         return;
       }
-      editingStudent = student;
+      editingStudent = { ...student };
       document.getElementById('modal-title').textContent = 'Editar Aluno';
       document.getElementById('modal').classList.remove('hidden');
       document.getElementById('student-form').reset();
@@ -643,10 +643,13 @@
     document.getElementById('student-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const cpfInput = document.getElementById('cpf').value;
+      
+      // Validação de CPF duplicado (excluindo o aluno sendo editado)
       if (cpfInput && allStudents.some(s => s.cpf === cpfInput && (!editingStudent || s.id !== editingStudent.id))) {
         showToast('Já existe um aluno com este CPF!', 'error');
         return;
       }
+
       const formData = {
         nome_completo: document.getElementById('nome_completo').value,
         cpf: cpfInput,
@@ -666,28 +669,49 @@
         nome_mae: document.getElementById('nome_mae').value,
         endereco: document.getElementById('endereco').value
       };
+
       if (editingStudent) {
-        Object.assign(editingStudent, formData);
-        const idx = allStudents.findIndex(s => s.id === editingStudent.id);
-        allStudents[idx] = editingStudent;
-        if (studentDocuments['new'] && !studentDocuments[editingStudent.id]) {
-          studentDocuments[editingStudent.id] = studentDocuments['new'];
-          delete studentDocuments['new'];
+        // Edição de aluno existente
+        const studentId = editingStudent.id;
+        const idx = allStudents.findIndex(s => s.id === studentId);
+        
+        if (idx !== -1) {
+          // Atualizar dados do aluno
+          allStudents[idx] = { id: studentId, ...formData };
+          
+          // Transferir documentos se houver
+          if (studentDocuments['new'] && !studentDocuments[studentId]) {
+            studentDocuments[studentId] = studentDocuments['new'];
+            delete studentDocuments['new'];
+          }
+          
+          showToast('✅ Aluno atualizado com sucesso!', 'success');
         }
-        showToast('Aluno atualizado!', 'success');
       } else {
+        // Novo aluno
         const newId = studentIdCounter++;
         allStudents.push({ id: newId, ...formData });
+        
+        // Transferir documentos se houver
         if (studentDocuments['new']) {
           studentDocuments[newId] = studentDocuments['new'];
           delete studentDocuments['new'];
         }
-        showToast('Aluno cadastrado!', 'success');
+        
+        showToast('✅ Aluno cadastrado com sucesso!', 'success');
       }
+
+      // Salvar tudo no localStorage
       saveStudents();
+      
+      // Limpar estado de edição
+      editingStudent = null;
+      
+      // Atualizar interface
       closeModal();
       filteredStudents = [...allStudents];
       renderStudentsList();
+      updateStats();
     });
 
     function renderStudentsList() {
@@ -988,5 +1012,5 @@
       document.getElementById('pdf-modal').classList.add('hidden');
     });
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9bb89b370662273d',t:'MTc2ODAxMDY5NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9bb8a71d02c4f612',t:'MTc2ODAxMTE4MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
