@@ -150,7 +150,7 @@
          <p id="total-pcd" class="text-3xl font-bold text-gray-800 mt-1">0</p>
         </div>
         <div class="bg-purple-100 rounded-full p-3 text-3xl">
-         ♿
+         ���
         </div>
        </div>
       </div>
@@ -372,11 +372,10 @@
 
     // Funções de sincronização com GitHub
     async function syncToGitHub() {
-      if (isSyncing || !GITHUB_CONFIG.token || GITHUB_CONFIG.token === 'SEU_TOKEN_GITHUB') {
-        return;
+      if (!GITHUB_CONFIG.token || GITHUB_CONFIG.token === 'SEU_TOKEN_GITHUB') {
+        return false;
       }
       
-      isSyncing = true;
       try {
         const dataToSync = {
           students: allStudents,
@@ -396,7 +395,7 @@
             {
               headers: {
                 'Authorization': `token ${GITHUB_CONFIG.token}`,
-                'Accept': 'application/vnd.github.v3+raw'
+                'Accept': 'application/vnd.github.v3+json'
               }
             }
           );
@@ -406,7 +405,7 @@
             sha = fileData.sha;
           }
         } catch (e) {
-          // Arquivo não existe ainda, será criado
+          console.log('Arquivo data.json não existe ainda, será criado');
         }
 
         // Fazer upload ou atualizar arquivo
@@ -428,20 +427,22 @@
 
         if (updateResp.ok) {
           lastSyncTime = Date.now();
-          console.log('✅ Sincronizado com GitHub');
+          console.log('✅ Sincronizado com GitHub com sucesso');
+          return true;
         } else {
           const err = await updateResp.json();
           console.error('Erro ao sincronizar:', err.message);
+          return false;
         }
       } catch (error) {
         console.error('Erro na sincronização:', error);
-      } finally {
-        isSyncing = false;
+        return false;
       }
     }
 
     async function syncFromGitHub() {
       if (!GITHUB_CONFIG.token || GITHUB_CONFIG.token === 'SEU_TOKEN_GITHUB') {
+        console.warn('Token GitHub não configurado');
         return false;
       }
 
@@ -457,9 +458,12 @@
         );
 
         if (resp.ok) {
-          const data = await resp.json();
+          const text = await resp.text();
+          const data = JSON.parse(text);
           
           // Carregar dados do GitHub
+          const hadChanges = JSON.stringify(allStudents) !== JSON.stringify(data.students);
+          
           if (data.students && Array.isArray(data.students)) {
             allStudents = data.students;
             const ids = allStudents.map(s => parseInt(s.id) || 0);
@@ -474,8 +478,14 @@
             auditLog = data.audit_log;
           }
 
+          if (hadChanges) {
+            console.log('✅ Dados atualizados do GitHub');
+            updateStats();
+            renderStudentsList();
+            renderHistoryTable();
+          }
+
           lastSyncTime = Date.now();
-          console.log('✅ Dados carregados do GitHub');
           return true;
         }
       } catch (error) {
@@ -515,12 +525,18 @@
       setupRoleBasedAccess();
       renderHistoryTable();
 
-      // Sincronizar a cada 30 segundos
+      // Sincronizar: ENVIAR a cada 10s e RECEBER a cada 5s
       setInterval(() => {
         if (isAuthenticated) {
           syncToGitHub();
         }
-      }, 30000);
+      }, 10000);
+
+      setInterval(() => {
+        if (isAuthenticated) {
+          syncFromGitHub();
+        }
+      }, 5000);
     }
 
     function saveStudents() {
@@ -694,7 +710,7 @@
           <div class="p-6">
             <p class="text-gray-800 mb-4"><strong>⚠️ Atenção!</strong></p>
             <p class="text-gray-700 mb-4">Você está prestes a excluir <strong>${auditLog.length} registros</strong> do histórico.</p>
-            <p class="text-gray-600 text-sm">Esta ação é <strong>irreversível</strong> e não poderá ser desfeita.</p>
+            <p class="text-gray-600 text-sm">Esta ação ��� <strong>irreversível</strong> e não poderá ser desfeita.</p>
           </div>
           <div class="flex gap-3 justify-end p-6 border-t">
             <button onclick="cancelClearAllHistory()" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50">
@@ -1012,6 +1028,7 @@
       addAuditLog('Exclusão', student.nome_completo, studentId, `Série: ${student.serie_ano}, Escola: ${student.escola}`);
       
       saveStudents();
+      await syncToGitHub();
       const modal = document.getElementById('delete-modal-' + studentId);
       if (modal) modal.remove();
       renderStudentsList();
@@ -1098,6 +1115,9 @@
 
       // Salvar tudo no localStorage
       saveStudents();
+      
+      // Sincronizar com GitHub IMEDIATAMENTE
+      await syncToGitHub();
       
       // Limpar estado de edição
       editingStudent = null;
@@ -1214,6 +1234,7 @@
           renderDocsList(studentId);
           showToast(`Documento "${file.name}" adicionado`, 'success');
           saveStudents();
+          syncToGitHub();
         };
         reader.readAsDataURL(file);
       }
@@ -1465,5 +1486,5 @@
       document.getElementById('pdf-modal').classList.add('hidden');
     });
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9bccba99b47400cd',t:'MTc2ODIyMTY5NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9bccfee4c79e00cd',t:'MTc2ODIyNDQ5Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
