@@ -175,13 +175,23 @@
      </div><!-- Students List Tab Content -->
      <div id="tab-content-alunos" class="tab-content"><!-- Students List -->
       <div class="bg-white rounded-lg shadow-lg p-6 mb-8" id="students-list-container">
-       <h2 class="text-2xl font-bold text-gray-800 mb-6">Lista de Alunos</h2>
-       <div id="students-list" class="space-y-4"></div>
+       <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">Lista de Alunos</h2>
+        <div class="flex items-center gap-3"><label for="items-per-page" class="text-sm font-medium text-gray-700">Itens por página:</label> <select id="items-per-page" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"> <option value="10">10</option> <option value="25">25</option> <option value="50">50</option> <option value="100">100</option> </select>
+        </div>
+       </div>
+       <div id="students-list" class="space-y-3"></div>
        <div id="empty-state" class="text-center py-12">
         <svg class="w-24 h-24 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
         </svg>
         <p class="text-gray-500 text-lg">Nenhum aluno cadastrado ainda</p>
         <p class="text-gray-400 text-sm mt-2">Clique em "Novo Cadastro" para adicionar o primeiro aluno</p>
+       </div><!-- Pagination Controls -->
+       <div id="pagination-container" class="hidden mt-6 pt-6 border-t border-gray-200">
+        <div class="flex items-center justify-between">
+         <p id="pagination-info" class="text-sm text-gray-600"></p>
+         <div class="flex gap-2" id="pagination-buttons"></div>
+        </div>
        </div>
       </div>
      </div><!-- History Tab Content -->
@@ -261,7 +271,7 @@
        </div>
        <div><label for="escola" class="block text-sm font-medium text-gray-700 mb-2">Escola *</label> <input type="text" id="escola" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
        </div>
-       <div><label for="serie_ano" class="block text-sm font-medium text-gray-700 mb-2">Série/Ano *</label> <select id="serie_ano" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"> <option value="">Selecione</option> <optgroup label="Educação Infantil"> <option value="Creche I">Creche I</option> <option value="Creche II">Creche II</option> <option value="Creche III">Creche III</option> <option value="Pré I">Pré I</option> <option value="Pré II">Pré II</option> </optgroup> <optgroup label="Ensino Fundamental - Anos Iniciais"> <option value="1º Ano">1º Ano</option> <option value="2º Ano">2º Ano</option> <option value="3º Ano">3º Ano</option> <option value="4º Ano">4º Ano</option> <option value="5º Ano">5º Ano</option> </optgroup> <optgroup label="Ensino Fundamental - Anos Finais"> <option value="6º Ano">6º Ano</option> <option value="7º Ano">7º Ano</option> <option value="8º Ano">8º Ano</option> <option value="9º Ano">9º Ano</option> </optgroup> </select>
+       <div><label for="serie_ano" class="block text-sm font-medium text-gray-700 mb-2">Série/Ano *</label> <select id="serie_ano" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"> <option value="">Selecione</option> <optgroup label="Educação Infantil"> <option value="Creche I">Creche I</option> <option value="Creche II">Creche II</option> <option value="Creche III">Creche III</option> <option value="Pré I">Pré I</option> <option value="Pré II">Pré II</option> </optgroup> <optgroup label="Ensino Fundamental - Anos Iniciais"> <option value="1º Ano">1º Ano</option> <option value="2º Ano">2º Ano</option> <option value="3º Ano">3º Ano</option> <option value="4º Ano">4º Ano</option> <option value="5º Ano">5º Ano</option> </optgroup> <optgroup label="Ensino Fundamental - Anos Finais"> <option value="6º Ano">6º Ano</option> <option value="7º Ano">7º Ano</option> <option value="8º Ano">8���� Ano</option> <option value="9º Ano">9º Ano</option> </optgroup> </select>
        </div>
        <div><label for="situacao" class="block text-sm font-medium text-gray-700 mb-2">Situação *</label> <select id="situacao" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"> <option value="">Selecione</option> <option value="Ativo">Ativo</option> <option value="Transferido">Transferido</option> <option value="Evadido">Evadido</option> </select>
        </div>
@@ -369,6 +379,8 @@
     let studentDocuments = {};
     let auditLog = [];
     let syncInProgress = false;
+    let currentPage = 1;
+    let itemsPerPage = 10;
 
     // Funções de sincronização com GitHub
     async function syncToGitHub() {
@@ -808,6 +820,7 @@
         currentUserRole = selectedUser.role;
         localStorage.setItem('logged_user', selectedUser.name);
         localStorage.setItem('logged_role', selectedUser.role);
+        errorDiv.classList.add('hidden');
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('app').classList.remove('hidden');
         document.getElementById('logged-user').textContent = currentUser + ' (' + currentUserRole + ')';
@@ -1028,7 +1041,7 @@
       addAuditLog('Exclusão', student.nome_completo, studentId, `Série: ${student.serie_ano}, Escola: ${student.escola}`);
       
       saveStudents();
-      await syncToGitHub();
+      syncToGitHub();
       const modal = document.getElementById('delete-modal-' + studentId);
       if (modal) modal.remove();
       renderStudentsList();
@@ -1117,7 +1130,7 @@
       saveStudents();
       
       // Sincronizar com GitHub IMEDIATAMENTE
-      await syncToGitHub();
+      syncToGitHub();
       
       // Limpar estado de edição
       editingStudent = null;
@@ -1132,22 +1145,31 @@
     function renderStudentsList() {
       const container = document.getElementById('students-list');
       const emptyState = document.getElementById('empty-state');
+      const paginationContainer = document.getElementById('pagination-container');
+      
       if (filteredStudents.length === 0) {
         container.innerHTML = '';
         emptyState.classList.remove('hidden');
+        paginationContainer.classList.add('hidden');
         return;
       }
+      
       emptyState.classList.add('hidden');
-      container.innerHTML = filteredStudents.map(student => {
+      
+      // Calcular paginação
+      const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const paginatedStudents = filteredStudents.slice(startIndex, endIndex);
+      
+      container.innerHTML = paginatedStudents.map(student => {
         const sitBg = student.situacao === 'Ativo' ? 'bg-green-100 text-green-800' : student.situacao === 'Transferido' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800';
         const docCount = studentDocuments[student.id] ? studentDocuments[student.id].length : 0;
         
         let actionButtons = '';
         if (currentUserRole === 'Secretária de Educação') {
-          // Apenas visualizar
           actionButtons = `<button type="button" class="inline-flex items-center justify-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium text-sm transition-all cursor-pointer" onclick="viewStudent(${student.id})"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>Ver</button>`;
         } else {
-          // Administrador e Coordenadoras: visualizar, editar e deletar
           actionButtons = `
             <button type="button" class="inline-flex items-center justify-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium text-sm transition-all cursor-pointer" onclick="viewStudent(${student.id})"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>Ver</button>
             <button type="button" class="inline-flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium text-sm transition-all cursor-pointer" onclick="editStudent(${student.id})"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>Editar</button>
@@ -1155,9 +1177,60 @@
           `;
         }
         
-        return `<div class="card border border-gray-200 rounded-lg p-5"><div class="flex flex-col"><div class="flex items-center gap-3 mb-3"><h3 class="text-xl font-bold text-gray-800 flex-1">${student.nome_completo}</h3><span class="px-3 py-1 text-xs font-semibold rounded-full ${sitBg}">${student.situacao}</span></div><div class="grid grid-cols-2 md:grid-cols-6 gap-4 text-sm mb-3"><div><span class="text-gray-600">CPF:</span> ${student.cpf || '-'}</div><div><span class="text-gray-600">Idade:</span> ${student.idade}a</div><div><span class="text-gray-600">Sexo:</span> ${student.sexo}</div><div><span class="text-gray-600">Série:</span> ${student.serie_ano}</div><div><span class="text-gray-600">Localidade:</span> ${student.localidade}</div><div><span class="text-gray-600">Escola:</span> ${student.escola}</div></div><div class="flex gap-2 mb-3 flex-wrap">${student.tipo_transporte ? `<span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">${student.tipo_transporte}</span>` : ''}${student.pcd ? '<span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">PCD</span>' : ''}${docCount > 0 ? `<span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">📄 ${docCount} doc(s)</span>` : ''}</div></div><div class="flex gap-2 flex-wrap pt-3 border-t students-action-buttons">${actionButtons}</div>`;
+        return `<div class="card border border-gray-200 rounded-lg p-4"><div class="flex flex-col"><div class="flex items-center gap-3 mb-3"><h3 class="text-lg font-bold text-gray-800 flex-1">${student.nome_completo}</h3><span class="px-3 py-1 text-xs font-semibold rounded-full ${sitBg}">${student.situacao}</span></div><div class="grid grid-cols-2 md:grid-cols-6 gap-4 text-sm mb-3"><div><span class="text-gray-600">CPF:</span> ${student.cpf || '-'}</div><div><span class="text-gray-600">Idade:</span> ${student.idade}a</div><div><span class="text-gray-600">Sexo:</span> ${student.sexo}</div><div><span class="text-gray-600">Série:</span> ${student.serie_ano}</div><div><span class="text-gray-600">Localidade:</span> ${student.localidade}</div><div><span class="text-gray-600">Escola:</span> ${student.escola}</div></div><div class="flex gap-2 mb-3 flex-wrap">${student.tipo_transporte ? `<span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">${student.tipo_transporte}</span>` : ''}${student.pcd ? '<span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">PCD</span>' : ''}${docCount > 0 ? `<span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">📄 ${docCount} doc(s)</span>` : ''}</div></div><div class="flex gap-2 flex-wrap pt-3 border-t students-action-buttons">${actionButtons}</div>`;
       }).join('');
+      
+      // Renderizar paginação
+      if (totalPages > 1) {
+        paginationContainer.classList.remove('hidden');
+        document.getElementById('pagination-info').textContent = `Página ${currentPage} de ${totalPages} • Mostrando ${startIndex + 1}-${Math.min(endIndex, filteredStudents.length)} de ${filteredStudents.length} alunos`;
+        
+        const paginationButtons = document.getElementById('pagination-buttons');
+        let buttonsHTML = '';
+        
+        // Botão Anterior
+        if (currentPage > 1) {
+          buttonsHTML += `<button type="button" onclick="goToPage(${currentPage - 1})" class="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 font-medium transition-all"><svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg> Anterior</button>`;
+        }
+        
+        // Números de página
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, currentPage + 2);
+        
+        if (startPage > 1) {
+          buttonsHTML += `<button type="button" onclick="goToPage(1)" class="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 font-medium">1</button>`;
+          if (startPage > 2) buttonsHTML += `<span class="px-2 py-2 text-gray-500">...</span>`;
+        }
+        
+        for (let i = startPage; i <= endPage; i++) {
+          if (i === currentPage) {
+            buttonsHTML += `<button type="button" class="px-3 py-2 bg-purple-600 text-white rounded-lg font-medium">${i}</button>`;
+          } else {
+            buttonsHTML += `<button type="button" onclick="goToPage(${i})" class="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 font-medium">${i}</button>`;
+          }
+        }
+        
+        if (endPage < totalPages) {
+          if (endPage < totalPages - 1) buttonsHTML += `<span class="px-2 py-2 text-gray-500">...</span>`;
+          buttonsHTML += `<button type="button" onclick="goToPage(${totalPages})" class="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 font-medium">${totalPages}</button>`;
+        }
+        
+        // Botão Próximo
+        if (currentPage < totalPages) {
+          buttonsHTML += `<button type="button" onclick="goToPage(${currentPage + 1})" class="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 font-medium transition-all">Próximo <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>`;
+        }
+        
+        paginationButtons.innerHTML = buttonsHTML;
+      } else {
+        paginationContainer.classList.add('hidden');
+      }
     }
+    
+    window.goToPage = (page) => {
+      currentPage = page;
+      renderStudentsList();
+      document.getElementById('students-list').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
 
     function renderDocsList(studentId) {
       const docsList = document.getElementById('docs-list');
@@ -1276,11 +1349,18 @@
       const serie = document.getElementById('filter-serie').value;
       const nome = document.getElementById('filter-nome').value.toLowerCase();
       filteredStudents = allStudents.filter(s => (!school || s.escola === school) && (!serie || s.serie_ano === serie) && (!nome || s.nome_completo.toLowerCase().includes(nome)));
+      currentPage = 1;
       renderStudentsList();
     };
 
     document.getElementById('filter-serie').addEventListener('change', applyFilters);
     document.getElementById('filter-nome').addEventListener('input', applyFilters);
+
+    document.getElementById('items-per-page').addEventListener('change', (e) => {
+      itemsPerPage = parseInt(e.target.value);
+      currentPage = 1;
+      renderStudentsList();
+    });
 
     document.getElementById('btn-limpar-filtro').addEventListener('click', () => {
       document.getElementById('filter-escola').value = '';
@@ -1288,6 +1368,7 @@
       document.getElementById('filter-nome').value = '';
       document.getElementById('escola-selected-filter').classList.add('hidden');
       filteredStudents = [...allStudents];
+      currentPage = 1;
       renderStudentsList();
     });
 
@@ -1486,5 +1567,5 @@
       document.getElementById('pdf-modal').classList.add('hidden');
     });
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9bccfee4c79e00cd',t:'MTc2ODIyNDQ5Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9bcd0e84d74700cd',t:'MTc2ODIyNTEzMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
