@@ -342,6 +342,17 @@
    </div>
   </div>
   <script>
+    // ⚠️ CONFIGURAÇÃO DO GITHUB - ALTERE PARA SEU REPOSITÓRIO
+    const GITHUB_CONFIG = {
+      owner: 'SEU_USERNAME_GITHUB',  // Ex: "francisco-silva"
+      repo: 'escola-alunos-db',       // Nome do repositório
+      token: 'SEU_TOKEN_GITHUB'       // Gere em https://github.com/settings/tokens
+    };
+
+    const GITHUB_API = 'https://api.github.com/repos';
+    let lastSyncTime = 0;
+    let isSyncing = false;
+
     const USERS = [
       { name: 'Francisco Silva', password: 'das496431', role: 'Administrador' },
       { name: 'Gillâne', password: 'semed123', role: 'Secretária de Educação' },
@@ -357,40 +368,170 @@
     let studentIdCounter = 1;
     let studentDocuments = {};
     let auditLog = [];
+    let syncInProgress = false;
 
-    function loadStudents() {
-      const stored = localStorage.getItem('students_data');
-      if (stored) {
+    // Funções de sincronização com GitHub
+    async function syncToGitHub() {
+      if (isSyncing || !GITHUB_CONFIG.token || GITHUB_CONFIG.token === 'SEU_TOKEN_GITHUB') {
+        return;
+      }
+      
+      isSyncing = true;
+      try {
+        const dataToSync = {
+          students: allStudents,
+          documents: studentDocuments,
+          audit_log: auditLog,
+          lastUpdated: new Date().toISOString()
+        };
+
+        const fileContent = JSON.stringify(dataToSync, null, 2);
+        const encodedContent = btoa(unescape(encodeURIComponent(fileContent)));
+
+        // Obter SHA do arquivo atual (se existir)
+        let sha = null;
         try {
+          const getResp = await fetch(
+            `${GITHUB_API}/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/data.json`,
+            {
+              headers: {
+                'Authorization': `token ${GITHUB_CONFIG.token}`,
+                'Accept': 'application/vnd.github.v3+raw'
+              }
+            }
+          );
+          
+          if (getResp.ok) {
+            const fileData = await getResp.json();
+            sha = fileData.sha;
+          }
+        } catch (e) {
+          // Arquivo não existe ainda, será criado
+        }
+
+        // Fazer upload ou atualizar arquivo
+        const updateResp = await fetch(
+          `${GITHUB_API}/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/data.json`,
+          {
+            method: 'PUT',
+            headers: {
+              'Authorization': `token ${GITHUB_CONFIG.token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              message: `🔄 Sincronização automática - ${new Date().toLocaleString('pt-BR')}`,
+              content: encodedContent,
+              sha: sha
+            })
+          }
+        );
+
+        if (updateResp.ok) {
+          lastSyncTime = Date.now();
+          console.log('✅ Sincronizado com GitHub');
+        } else {
+          const err = await updateResp.json();
+          console.error('Erro ao sincronizar:', err.message);
+        }
+      } catch (error) {
+        console.error('Erro na sincronização:', error);
+      } finally {
+        isSyncing = false;
+      }
+    }
+
+    async function syncFromGitHub() {
+      if (!GITHUB_CONFIG.token || GITHUB_CONFIG.token === 'SEU_TOKEN_GITHUB') {
+        return false;
+      }
+
+      try {
+        const resp = await fetch(
+          `${GITHUB_API}/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/data.json`,
+          {
+            headers: {
+              'Authorization': `token ${GITHUB_CONFIG.token}`,
+              'Accept': 'application/vnd.github.v3.raw'
+            }
+          }
+        );
+
+        if (resp.ok) {
+          const data = await resp.json();
+          
+          // Carregar dados do GitHub
+          if (data.students && Array.isArray(data.students)) {
+            allStudents = data.students;
+            const ids = allStudents.map(s => parseInt(s.id) || 0);
+            studentIdCounter = Math.max(...ids, 0) + 1;
+          }
+          
+          if (data.documents && typeof data.documents === 'object') {
+            studentDocuments = data.documents;
+          }
+          
+          if (data.audit_log && Array.isArray(data.audit_log)) {
+            auditLog = data.audit_log;
+          }
+
+          lastSyncTime = Date.now();
+          console.log('✅ Dados carregados do GitHub');
+          return true;
+        }
+      } catch (error) {
+        console.error('Erro ao carregar do GitHub:', error);
+      }
+      
+      return false;
+    }
+
+    async function loadStudents() {
+      // Primeiro, tentar sincronizar do GitHub
+      const syncSuccess = await syncFromGitHub();
+      
+      if (!syncSuccess) {
+        // Se falhar, usar dados locais
+        const stored = localStorage.getItem('students_data');
+        if (stored) {
           allStudents = JSON.parse(stored);
           const ids = allStudents.map(s => parseInt(s.id) || 0);
           studentIdCounter = Math.max(...ids, 0) + 1;
-        } catch (e) {
-          allStudents = [];
-          studentIdCounter = 1;
+        }
+
+        const docStored = localStorage.getItem('student_documents');
+        if (docStored) {
+          studentDocuments = JSON.parse(docStored);
+        }
+
+        const auditStored = localStorage.getItem('audit_log');
+        if (auditStored) {
+          auditLog = JSON.parse(auditStored);
         }
       }
-      const storedDocs = localStorage.getItem('student_documents');
-      if (storedDocs) {
-        try {
-          studentDocuments = JSON.parse(storedDocs);
-        } catch (e) {
-          studentDocuments = {};
-        }
-      }
-      const storedAudit = localStorage.getItem('audit_log');
-      if (storedAudit) {
-        try {
-          auditLog = JSON.parse(storedAudit);
-        } catch (e) {
-          auditLog = [];
-        }
-      }
+
       filteredStudents = [...allStudents];
       updateStats();
       renderStudentsList();
       setupRoleBasedAccess();
       renderHistoryTable();
+
+      // Sincronizar a cada 30 segundos
+      setInterval(() => {
+        if (isAuthenticated) {
+          syncToGitHub();
+        }
+      }, 30000);
+    }
+
+    function saveStudents() {
+      localStorage.setItem('students_data', JSON.stringify(allStudents));
+      localStorage.setItem('student_documents', JSON.stringify(studentDocuments));
+      localStorage.setItem('audit_log', JSON.stringify(auditLog));
+      
+      // Sincronizar com GitHub imediatamente após salvar
+      syncToGitHub();
+      
+      updateStats();
     }
 
     function setupRoleBasedAccess() {
@@ -1324,5 +1465,5 @@
       document.getElementById('pdf-modal').classList.add('hidden');
     });
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9bb8d9c481e200df',t:'MTc2ODAxMzI1Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9bccba99b47400cd',t:'MTc2ODIyMTY5NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
